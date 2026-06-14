@@ -11,7 +11,7 @@ if (!isset($_SESSION['tipo_usuario']) || $_SESSION['tipo_usuario'] != 'administr
     header("Location: login.html");
     exit();
 }
-
+//test
 
 // incluyo el archivo de conexión a la base de datos para poder consultar los datos necesarios para los reportes
 require_once "Conexion.php";
