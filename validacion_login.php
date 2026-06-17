@@ -2,6 +2,18 @@
 <?php
 session_start();  // 1. Siempre primero
 
+if (!isset($_COOKIE['visita'])){
+setcookie("visita", "ok", time() + 3600); // la cookie dura 1 hora
+echo "Bienvenido por primera vez";
+}
+else
+{
+    echo "Gracias por visitarnos nuevamente";
+}
+
+
+
+
 if (isset($_POST["Ingresar"])) {
 
     $email = $_POST['email'];           // 2. Asignar variables
