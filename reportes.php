@@ -19,8 +19,12 @@ require_once "Conexion.php";
 
 echo "<h2>Reportes - TechRent</h2>";
 
-// consultar a la base por los equipos mas prestados
 
+
+
+
+
+// consultar a la base por los equipos mas prestados
 function EquiposMasPrestados() {
 
 // crear un objeto de la clase ConexionBD
@@ -58,6 +62,8 @@ echo "</fieldset>";
 $conexion->cerrarConexion();
 
 }
+
+
 
 
 
@@ -107,6 +113,7 @@ echo "</fieldset>";
 $conexion->cerrarConexion();
 
 }
+
 
 
 
@@ -170,6 +177,9 @@ echo "</fieldset>";
 // cerrar la conexión a la base de datos
 $conexion->cerrarConexion();
 }
+
+
+
 
 
 
