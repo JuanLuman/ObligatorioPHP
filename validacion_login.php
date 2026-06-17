@@ -2,16 +2,6 @@
 <?php
 session_start();  // 1. Siempre primero
 
-if (!isset($_COOKIE['visita'])){
-setcookie("visita", "ok", time() + 3600); // la cookie dura 1 hora
-echo "Bienvenido por primera vez";
-}
-else
-{
-    echo "Gracias por visitarnos nuevamente";
-}
-
-
 
 
 if (isset($_POST["Ingresar"])) {
@@ -27,23 +17,46 @@ if (isset($_POST["Ingresar"])) {
                  WHERE email = '$email' AND password = '$password'";
     $resultado = $conexion->ejecutarConsulta($consulta);
 
-    if ($resultado->num_rows > 0) {
-        $fila = mysqli_fetch_array($resultado, MYSQLI_ASSOC);
+
+    if ($resultado && $resultado->mysqli_num_rows > 0) {
+        $fila = mysqli_fetch_array($resultado, MYSQLI_ASSOC); //Si hay resultados, asignar variables de sesión
         $_SESSION['ci'] = $fila['ci'];
         $_SESSION['tipo_usuario'] = $fila['tipo_usuario'];
-        $_SESSION['ultimo_acceso'] = time();
+        $_SESSION['ultimo_acceso'] = time(); // para controlar la sesión
 
-        if ($fila['tipo_usuario'] == 'administrador') {
+
+       // si el usuario marca la opción de recordar su email, guardo el email en una cookie por 30 días
+        if (isset($_POST['recordar'])) {
+            setcookie('email', $email, time() + (30 * 24 * 60 * 60)); // 30 días
+        } else {
+            // si no marca la opción, borro la cookie si existe
+            if (isset($_COOKIE['email'])) {
+                setcookie('email', '', time() - 3600); // borrar cookie
+            }
+        }
+
+ 
+
+        if ($_SESSION['tipo_usuario'] == 'administrador') {
             header("Location: principal_admin.php");
-        } elseif ($fila['tipo_usuario'] == 'funcionario') {
+        } elseif ($_SESSION['tipo_usuario'] == 'funcionario') {
             header("Location: principal_funcionario.php");
         } else {
-            header("Location: index.php");
+            header("Location: login.html");  
+            exit(); 
+
         }
+
     } else {
-        echo "No hay resultados para el email y contraseña proporcionados.";
-       // header("Location: login.html");  // sin echo antes de header
+        // echo "No hay resultados para el email y contraseña proporcionados.";
+
+       header("Location: login.html");  // sin echo antes de header
+       exit(); // siempre después de header
     }
+
+
+
+    
 
     $conexion->cerrarConexion();
 }

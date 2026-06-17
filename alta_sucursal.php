@@ -12,6 +12,9 @@ $ok    = isset($_GET['ok']);
 $error = isset($_GET['error']) ? $_GET['error'] : "";
 ?>
 
+
+
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
