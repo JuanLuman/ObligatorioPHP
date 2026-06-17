@@ -47,7 +47,7 @@ public function cerrarConexion() {
 
 }
 
-echo "Hola";
+
 
 
 

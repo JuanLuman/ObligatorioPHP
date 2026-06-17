@@ -29,7 +29,8 @@ if (isset($_POST["Ingresar"])) {
             header("Location: index.php");
         }
     } else {
-        header("Location: login.php");  // sin echo antes
+        echo "No hay resultados para el email y contraseña proporcionados.";
+       // header("Location: login.html");  // sin echo antes de header
     }
 
     $conexion->cerrarConexion();
