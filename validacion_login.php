@@ -1,13 +1,13 @@
 
 <?php
-session_start();  // 1. Siempre primero
+session_start();  
 
 
 
 if (isset($_POST["Ingresar"])) {
 
-    $email = $_POST['email'];           // 2. Asignar variables
-    $password = md5($_POST['password']); // 3. Encriptar
+    $email = $_POST['email'];           //  
+    $password = md5($_POST['password']); // Encriptar
 
     require_once "Conexion.php";
     $conexion = new ConexionBD();
@@ -19,6 +19,7 @@ if (isset($_POST["Ingresar"])) {
 
 
     if ($resultado && $resultado->mysqli_num_rows > 0) {
+        
         $fila = mysqli_fetch_array($resultado, MYSQLI_ASSOC); //Si hay resultados, asignar variables de sesión
         $_SESSION['ci'] = $fila['ci'];
         $_SESSION['tipo_usuario'] = $fila['tipo_usuario'];
@@ -31,16 +32,18 @@ if (isset($_POST["Ingresar"])) {
         } else {
             // si no marca la opción, borro la cookie si existe
             if (isset($_COOKIE['email'])) {
-                setcookie('email', '', time() - 3600); // borrar cookie
+                setcookie('email', '', time() - 3600); // borro la cookie expirándola
             }
         }
 
  
-
+        // Redirijo a la página principal según el tipo de usuario
         if ($_SESSION['tipo_usuario'] == 'administrador') {
             header("Location: principal_admin.php");
+            exit();
         } elseif ($_SESSION['tipo_usuario'] == 'funcionario') {
             header("Location: principal_funcionario.php");
+            exit();
         } else {
             header("Location: login.html");  
             exit(); 
@@ -48,15 +51,18 @@ if (isset($_POST["Ingresar"])) {
         }
 
     } else {
-        // echo "No hay resultados para el email y contraseña proporcionados.";
 
-       header("Location: login.html");  // sin echo antes de header
-       exit(); // siempre después de header
+       // si no encuentra el usuario, borro las cookies
+        if (isset($_COOKIE['email'])) {
+            setcookie('email', '', time() - 3600); // borro la cookie expirándola
+        }
+
+        // redirijo al login con un mensaje de error
+       header("Location: login.html?error=Email o contraseña incorrectos");
+       exit();
     }
 
 
-
-    
 
     $conexion->cerrarConexion();
 }

@@ -4,23 +4,22 @@
 // debo verificar que el usuario sea un administrador antes de mostrar la página de reportes
 
 //debo invocar session_start() antes de cualquier salida al navegador para poder usar   // el array superglobal $_SESSION
-//session_start();
+session_start();
 
 //verifico que el usuario sea un administrador, si no lo es, lo redirijo a la página de login
 if (!isset($_SESSION['tipo_usuario']) || $_SESSION['tipo_usuario'] != 'administrador') {
-    header("Location: login.html");
-    exit();
+    //redirijo al login con un mensaje de error indicando que no tiene permisos para acceder a esta página
+     header("Location: login.html?error=No tienes permisos para acceder a esta página");
+     exit();
 }
-//test
+   
 
-// incluyo el archivo de conexión a la base de datos para poder consultar los datos necesarios para los reportes
+
+
 require_once "Conexion.php";
 
 
 echo "<h2>Reportes - TechRent</h2>";
-
-
-
 
 
 
@@ -148,7 +147,7 @@ $resultado = $conexion->ejecutarConsulta($consulta);
 
 
 //verifico si hay resultados, si no los hay, muestro un mensaje indicando que no hay equipos vencidos
-if (mysqli_num_rows($resultado) == 0) {
+if ($resultado && mysqli_num_rows($resultado) == 0) {
     echo "<p align='center'>No hay equipos vencidos actualmente.</p>";
     $conexion->cerrarConexion();
     return;
@@ -206,7 +205,7 @@ $consulta = "SELECT s.id_sucursal, s.nombre_sucursal, COUNT(p.id_prestamo) AS ca
 $resultado = $conexion->ejecutarConsulta($consulta);    
 
 // si no hay resultados, muestro un mensaje indicando que no hay prestamos registrados
-if (mysqli_num_rows($resultado) == 0) {
+if ($resultado && mysqli_num_rows($resultado) == 0) {
     echo "<p align='center'>No hay prestamos registrados.</p>";
     $conexion->cerrarConexion();
     return;
