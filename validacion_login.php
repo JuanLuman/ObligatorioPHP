@@ -10,7 +10,7 @@ if (isset($_POST["Ingresar"])) {
     $conexion = new ConexionBD();
     $conexion->conectar();
 
-    $consulta = "SELECT ci, tipo_usuario FROM usuarios 
+    $consulta = "SELECT primer_nombre,id_usuario, ci, tipo_usuario FROM usuarios 
                  WHERE email = '$email' AND password = '$password'";
     $resultado = $conexion->ejecutarConsulta($consulta);
 
@@ -31,6 +31,10 @@ if (isset($_POST["Ingresar"])) {
         $_SESSION['ci'] = $fila['ci'];
         $_SESSION['tipo_usuario'] = $fila['tipo_usuario'];
         $_SESSION['ultimo_acceso'] = time();
+        $_SESSION['id_usuario'] = $fila['id_usuario'];
+        $_SESSION['primer_nombre'] = $fila['primer_nombre'];
+
+
 
         echo "<p>Tipo de usuario: " . $_SESSION['tipo_usuario'] . "</p>";
 
