@@ -47,8 +47,35 @@ class Prestamo
 
 
 
+    //creo el metodo para obtener los prestamos activos del funcionario
+    public function ObtenerPrestamosActivos($id_funcionario) {
+
+        $conexion = new ConexionBD();
+        $conexion->conectar();
+
+        $consulta = "SELECT p.id_prestamo,
+                            p.id_funcionario,
+                            p.id_equipo,
+                            p.fecha_prestamo,
+                            p.fecha_devolucion_prevista,
+                            p.fecha_devolucion_real,
+                            p.estado,
+                            e.foto,
+                            e.codigo_inventario,
+                            e.marca,
+                            e.modelo
+        FROM prestamos p
+        INNER JOIN equipos e ON p.id_equipo = e.id_equipo
+        WHERE id_funcionario = $id_funcionario AND P.estado = 'activo'";
+
+        $resultado = $conexion->ejecutarConsulta($consulta);
+
+        $conexion->cerrarConexion();
+        return $resultado;
+    }
 
 
+   
 
     
 }

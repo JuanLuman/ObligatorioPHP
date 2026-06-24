@@ -5,26 +5,15 @@ session_start();
 if (isset($_SESSION['tipo_usuario']) && $_SESSION['tipo_usuario'] == 'funcionario') {
      //aca va el código para mostrar la pantalla principal de funcionario
 
-     echo "<h2>Bienvenido $_SESSION[primer_nombre]</h2>";
+     echo "<h2>Bienvenido, $_SESSION[primer_nombre]</h2>";
 
-// incluyo el archivo de conexión a la base de datos para poder consultar los préstamos activos del funcionario
-require_once "Conexion.php";
-
-// creo un objeto de la clase ConexionBD
-$conexion = new ConexionBD(); 
-$conexion->conectar();  
-
-//verificar que la conexión se haya establecido correctamente
-if ($conexion->conectar() === false) {
-    die("Error al conectar a la base de datos: " . mysqli_connect_error());
-}
 
 
 // Verificar el tiempo de inactividad
 $tiempo_transcurrido = time() - $_SESSION['ultimo_acceso'];
 //mostrar cuánto tiempo le queda al usuario antes de que se cierre la sesión por inactividad
 
-$limite = ($_SESSION['tipo'] == 'Administrador') ? 3600 : 900; 
+$limite = ($_SESSION['tipo'] == 'administrador') ? 3600 : 900; 
 
 $tiempo_restante = $limite - $tiempo_trancurrido; 
 
@@ -43,30 +32,30 @@ if ($tiempo_transcurrido > $limite) {
 
 
 
+
+
+// debo interactuar con las clases de la carpeta clases 
+require_once "Conexion.php";
+require_once "Equipo.php";
+require_once "Prestamo.php";
+
+// en vez de crear un objeto de la clase ConexionBD, utilizo las clases de la carpeta clases
+// como quiero mostrar los equipos prestados, creo un objeto de la clase Funcionario
+
 // consultar a la base por los préstamos activos del funcionario
-$consulta = "SELECT p.id_prestamo, 
-                    p.id_funcionario, 
-                    p.id_equipo, 
-                    p.fecha_prestamo, 
-                    p.fecha_devolucion_prevista, 
-                    p.fecha_devolucion_real, 
-                    p.estado, 
-                    e.foto, 
-                    e.codigo_inventario, 
-                    e.marca, 
-                    e.modelo
-             FROM prestamos p 
-             INNER JOIN equipos e ON p.id_equipo = e.id_equipo 
-             WHERE p.estado = 'activo' AND p.id_funcionario = " . $_SESSION['id_usuario'] . " "; 
+//esta consulta debe ir en la clase prestamo para poder reutilizarla en otros archivos
 
-$resultado = $conexion->ejecutarConsulta($consulta);
+$prestamo_activo = new Prestamo();
+//reutilizo funcion de la clase prestamo para obtener los prestamos activos del funcionario
+$prestamo_activo->ObtenerPrestamosActivos($_SESSION['id_usuario']);
+// no creo objeto de la clase conexion porque ya la estoy utilizando en la clase prestamo al usar require_once
+//si el usuario no tiene prestamos activos, se le muestra un mensaje indicando que no tiene prestamos activos
 
-
-
-//verifico si hay resultados, si no los hay, muestro un mensaje indicando que no hay prestamos activos
-if ($resultado && mysqli_num_rows($resultado) > 0) {
-
-      // Mostrar los resultados en una tabla 
+if (empty($prestamo_activo->getObtenerPrestamosActivos())) { 
+    echo "<p>Usted no posee préstamos activos.</p>";
+}else
+{
+    //si tiene prestamos activos los muestro por pantalla en una tabla
     echo "<fieldset><legend align='center'>Préstamos activos</legend>";
     echo "<table border='1' align='center'>";
     echo "<tr><th>Imagen</th><th>
@@ -75,28 +64,32 @@ if ($resultado && mysqli_num_rows($resultado) > 0) {
                   Fecha préstamo</th><th>
                   Fecha devolución prevista</th><th>
                   Estado</th></tr>";
-
-    while ($fila = mysqli_fetch_array($resultado, MYSQLI_ASSOC)) {
-        echo "<tr><td><img src='fotos_equipos/" . $fila['foto'] . "' alt='Imagen del equipo' width='100'></td><td>" . 
-                                    $fila['codigo_inventario'] . "</td><td>" . 
-                                    $fila['marca'] . " " . 
-                                    $fila['modelo'] . "</td><td>" . 
-                                    $fila['fecha_prestamo'] . "</td><td>" . 
-                                    $fila['fecha_devolucion_prevista'] . "</td><td>" . 
-                                    $fila['estado'] . "</td></tr>";
+    foreach ($prestamo_activo->getObtenerPrestamosActivos() as $prestamo) {
+        echo "<tr>";
+        echo "<td><img src='fotos_equipos/" . $prestamo->getFoto() . "' alt='Imagen del equipo' width='100'></td>";
+        echo "<td>" . $prestamo->getCodigoInventario() . "</td>";
+        echo "<td>" . $prestamo->getMarca() . " " . $prestamo->getModelo() . "</td>";
+        echo "<td>" . $prestamo->getFechaPrestamo() . "</td>";
+        echo "<td>" . $prestamo->getFechaDevolucionPrevista() . "</td>";
+        echo "<td>" . $prestamo->getEstado() . "</td>";
+        echo "</tr>";
     }
     echo "</table>";
     echo "</fieldset>";
 
-    $conexion->cerrarConexion();
-    return;
-}
-else{
-    echo "<p align='center'>Usted no posee prestamos activos.</p>";
-    $conexion->cerrarConexion();
-    return;
-    }
+    //cierro la conexion a la base de datos
+    $conexion->CerrarConexion();
 
+
+}
+
+
+
+
+
+
+
+   
 
 } 
 
@@ -110,39 +103,80 @@ if (isset($_SESSION['tipo_usuario']) && $_SESSION['tipo_usuario'] == 'administra
     
     echo "<h2>Bienvenido, $_SESSION[primer_nombre]</h2>";
 
-    // incluyo el archivo de conexión a la base de datos para poder consultar los préstamos activos del funcionario
-    require_once "Conexion.php";
+   require_once "Conexion.php";
 
-    // creo un objeto de la clase ConexionBD
-    $conexion = new ConexionBD(); // creo un objeto de la clase Conexion
-    $conexion->conectar();  //conectar a la base de datos
+   
+    $conexion = new ConexionBD(); 
+    $conexion->conectar(); 
 
-    //verificar que la conexión se haya establecido correctamente
+
     if ($conexion->conectar() === false) {
         die("Error al conectar a la base de datos: " . mysqli_connect_error());
     }
 
 
-// Verificar el tiempo de inactividad
-$tiempo_transcurrido = time() - $_SESSION['ultimo_acceso'];
-//mostrar cuánto tiempo le queda al usuario antes de que se cierre la sesión por inactividad
+    // Verificar el tiempo de inactividad
+    $tiempo_transcurrido = time() - $_SESSION['ultimo_acceso'];
+    //mostrar cuánto tiempo le queda al usuario antes de que se cierre la sesión por inactividad
 
-$limite = ($_SESSION['tipo_usuario'] == 'administrador') ? 3600 : 900; 
+    $limite = ($_SESSION['tipo_usuario'] == 'administrador') ? 3600 : 900; 
 
-$tiempo_restante = $limite - $tiempo_transcurrido; 
+    $tiempo_restante = $limite - $tiempo_transcurrido; 
 
-echo "Tiempo de inactividad: " . gmdate("H:i:s", $tiempo_restante);
+    echo "Tiempo de inactividad: " . gmdate("H:i:s", $tiempo_restante);
 
-if ($tiempo_transcurrido > $limite) {
-    // Si superó el tiempo de inactividad, cerramos la sesión
-    session_unset();
-    session_destroy();
-    header("Location: login.html?error=sesion_expirada");
-    exit;
-} else {
-    // Si está activo, renovamos el tiempo 
-    $_SESSION['ultimo_acceso'] = time();
-}
+    if ($tiempo_transcurrido > $limite) {
+        // Si superó el tiempo de inactividad, cerramos la sesión
+        session_unset();
+        session_destroy();
+        header("Location: login.html?error=sesion_expirada");
+        exit;
+    } else {
+        // Si está activo, renovamos el tiempo 
+        $_SESSION['ultimo_acceso'] = time();
+    }
+
+
+
+// mostrar todos los equipos prestados
+$equipos_prestados = new Equipo();
+$equipos_prestados->ObtenerEquiposPrestados();
+
+if (empty($equipos_prestados->getObtenerEquiposPrestados()))    
+    {
+        echo "<p>No hay equipos prestados.</p>";
+    }
+    else
+    {
+        //si hay equipos prestados los muestro por pantalla en una tabla
+
+    echo "<fieldset><legend align='center'>Equipos prestados</legend>";
+    echo "<table border='1' align='center'>";
+    echo "<tr><th>Imagen</th><th>
+                Código de inventario</th><th>
+                Marca y modelo</th><th>
+                Fecha préstamo</th><th>
+                Fecha devolución prevista</th><th>
+                Estado</th></tr>";
+            
+    foreach ($equipos_prestados->getObtenerEquiposPrestados() as $equipo) {
+        echo "<tr>";
+        echo "<td><img src='fotos_equipos/" . $equipo->getFoto() . "' alt='Imagen del equipo' width='100'></td>";
+        echo "<td>" . $equipo->getCodigoInventario() . "</td>";
+        echo "<td>" . $equipo->getMarca() . " " . $equipo->getModelo() . "</td>";
+        echo "<td>" . $equipo->getFechaPrestamo() . "</td>";
+        echo "<td>" . $equipo->getFechaDevolucionPrevista() . "</td>";
+        echo "<td>" . $equipo->getEstado() . "</td>";
+        echo "</tr>";
+    }
+    }
+    echo "</table>";
+    echo "</fieldset>";
+
+    //cierro la conexion a la base de datos
+    $conexion->CerrarConexion();
+
+
 
 
 
