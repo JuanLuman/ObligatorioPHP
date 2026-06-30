@@ -3,8 +3,8 @@
 class Prestamo
 {
     private $idPrestamo;
-    private $equipo;
-    private $funcionario;
+    private $idEquipo;
+    private $idFuncionario;
     private $fechaPrestamo;
     private $fechaDevolucionPrevista;
     private $fechaDevolucionReal;
@@ -13,9 +13,9 @@ class Prestamo
 
 
     public function __construct(
-        $equipo, $funcionario, $fechaPrestamo, $fechaDevolucionPrevista, $observaciones = "") {
-        $this->equipo = $equipo;
-        $this->funcionario = $funcionario;
+        $idEquipo, $idFuncionario, $fechaPrestamo, $fechaDevolucionPrevista, $observaciones = "") {
+        $this->idEquipo = $idEquipo;
+        $this->idFuncionario = $idFuncionario;
         $this->fechaPrestamo = $fechaPrestamo;
         $this->fechaDevolucionPrevista = $fechaDevolucionPrevista;
         $this->observaciones = $observaciones;
@@ -27,8 +27,8 @@ class Prestamo
     /* ==================== GETTERS ==================== */
 
     public function getIdPrestamo() { return $this->idPrestamo; }
-    public function getEquipo() { return $this->equipo; }
-    public function getFuncionario() { return $this->funcionario; }
+    public function getEquipo() { return $this->idEquipo; }
+    public function getFuncionario() { return $this->idFuncionario; }
     public function getFechaPrestamo() { return $this->fechaPrestamo; }
     public function getFechaDevolucionPrevista() { return $this->fechaDevolucionPrevista; }
     public function getFechaDevolucionReal() { return $this->fechaDevolucionReal; }
@@ -38,8 +38,8 @@ class Prestamo
     /* ==================== SETTERS ==================== */
 
     public function setIdPrestamo($idPrestamo) { $this->idPrestamo = $idPrestamo; }
-    public function setEquipo($equipo) { $this->equipo = $equipo; }
-    public function setFuncionario($funcionario) { $this->funcionario = $funcionario; }
+    public function setEquipo($idEquipo) { $this->idEquipo = $idEquipo; }
+    public function setFuncionario($idFuncionario) { $this->idFuncionario = $idFuncionario; }
     public function setFechaPrestamo($fechaPrestamo) { $this->fechaPrestamo = $fechaPrestamo; }
     public function setFechaDevolucionPrevista($fecha) { $this->fechaDevolucionPrevista = $fecha; }
     public function setFechaDevolucionReal($fecha) { $this->fechaDevolucionReal = $fecha; }
@@ -47,9 +47,47 @@ class Prestamo
 
 
 
+    public function registrarPrestamo()
+{
+    require_once "Conexion.php";
 
+    $conexion = new ConexionBD();
+    $conexion->conectar();
 
+    // Validación de fechas
+    if ($this->fechaPrestamo >= $this->fechaDevolucionPrevista)
+    {
+        $conexion->cerrarConexion();
+        return "La fecha de devolución prevista debe ser posterior a la fecha del préstamo.";
+    }
 
-    
+    $consulta = "INSERT INTO prestamos
+                 (id_equipo, id_funcionario, fecha_prestamo,
+                  fecha_devolucion_prevista, observaciones)
+                 VALUES
+                 ($this->idEquipo,
+                  $this->idFuncionario,
+                  '$this->fechaPrestamo',
+                  '$this->fechaDevolucionPrevista',
+                  '$this->observaciones')";
+
+    $resultado = $conexion->ejecutarConsulta($consulta);
+
+    if ($resultado)
+    {
+        // Actualizar el estado del equipo
+        $consulta = "UPDATE equipos
+                     SET estado='Prestado'
+                     WHERE id_equipo=$this->idEquipo";
+
+        $conexion->ejecutarConsulta($consulta);
+
+        $conexion->cerrarConexion();
+        return true;
+    }
+
+    $conexion->cerrarConexion();
+
+    return "No fue posible registrar el préstamo.";
 }
 ?>
