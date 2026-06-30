@@ -15,80 +15,102 @@ if (!isset($_SESSION['tipo_usuario']) || $_SESSION['tipo_usuario'] != 'funcionar
 // Incluyo la clase encargada de la conexión a la base de datos
 require_once "Conexion.php";
 
+// Incluyo las clases necesarias
+require_once "Equipo.php";
+require_once "Prestamo.php";
 
 // Título de la página
 echo "<h2>Solicitud de Préstamo - TechRent</h2>";
 
 
-// Función encargada de mostrar el formulario
-function MostrarFormularioPrestamo()
-{
-    // Creo un objeto conexión
-    $conexion = new ConexionBD();
+// =====================================================
+// Si el usuario envió el formulario, registro el préstamo
+// =====================================================
 
-    // Abro la conexión con MySQL
-    $conexion->conectar();
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    // Verifico que la conexión se haya realizado correctamente
-    if ($conexion->conectar() === false) {
-        die("Error al conectar a la base de datos");
+    // Creo el objeto préstamo
+    $prestamo = new Prestamo(
+        $_POST["id_equipo"],
+        $_SESSION["id_usuario"],
+        $_POST["fecha_prestamo"],
+        $_POST["fecha_devolucion_prevista"],
+        $_POST["observaciones"]
+    );
+
+    // Registro el préstamo
+    $resultado = $prestamo->registrarPrestamo();
+
+    // Muestro el resultado
+    if ($resultado === true) {
+        echo "<p align='center' style='color:green'><b>Préstamo registrado correctamente.</b></p>";
+    } else {
+        echo "<p align='center' style='color:red'><b>$resultado</b></p>";
     }
+}
 
-    // Consulta para obtener únicamente los equipos disponibles
-    // Los equipos prestados, en mantenimiento o dados de baja no aparecerán
-    $consulta = "
-        SELECT id_equipo,
-               codigo_inventario,
-               marca,
-               modelo
-        FROM equipos
-        WHERE estado = 'Disponible'
-        ORDER BY marca, modelo
-    ";
+// =====================================================
+// Obtengo los equipos disponibles de la sucursal
+// =====================================================
 
-    // Ejecuto la consulta
-    $resultado = $conexion->ejecutarConsulta($consulta);
+$equipos = Equipo::listarDisponibles($_SESSION["id_sucursal"]);
 
-    // Comienzo el formulario
-    echo "<form action='procesarPrestamo.php' method='POST'>";
+// =====================================================
+// Muestro el formulario
+// =====================================================
 
-    // Agrupo visualmente los controles
+MostrarFormularioPrestamo($equipos);
+
+
+
+//=======================================================
+// Función que muestra el formulario
+//=======================================================
+
+function MostrarFormularioPrestamo($equipos)
+{
+    echo "<h2 align='center'>Solicitud de Préstamo - TechRent</h2>";
+
+    echo "<form method='POST'>";
+
     echo "<fieldset>";
-    echo "<legend>Datos del préstamo</legend>";
+    echo "<legend align='center'>Datos del préstamo</legend>";
 
     echo "<table align='center'>";
 
-    // ---------------- EQUIPO ----------------
+    //===================================================
+    // Equipo
+    //===================================================
 
     echo "<tr>";
     echo "<td>Equipo:</td>";
     echo "<td>";
 
-    // Combo con los equipos disponibles
     echo "<select name='id_equipo' required>";
-
     echo "<option value=''>Seleccione un equipo</option>";
 
-    // Recorro todos los equipos obtenidos desde la base
-    while ($fila = mysqli_fetch_array($resultado, MYSQLI_ASSOC))
-    {
-        // Texto descriptivo que verá el usuario
-        $descripcion =
-            $fila['codigo_inventario'] . " - " .
-            $fila['marca'] . " " .
-            $fila['modelo'];
+    foreach ($equipos as $equipo) {
 
-        // Creo una opción del combo
-        echo "<option value='" . $fila['id_equipo'] . "'>";
+        $descripcion =
+            $equipo->getCodigoInventario() .
+            " - " .
+            $equipo->getMarca() .
+            " " .
+            $equipo->getModelo();
+
+        echo "<option value='" . $equipo->getIdEquipo() . "'>";
         echo $descripcion;
         echo "</option>";
     }
 
     echo "</select>";
+
     echo "</td>";
     echo "</tr>";
 
-    // ---------------- FECHA PRÉSTAMO ----------------
+    //===================================================
+    // Fecha préstamo
+    //===================================================
 
     echo "<tr>";
     echo "<td>Fecha préstamo:</td>";
@@ -97,7 +119,9 @@ function MostrarFormularioPrestamo()
     echo "</td>";
     echo "</tr>";
 
-    // ---------------- FECHA DEVOLUCIÓN ----------------
+    //===================================================
+    // Fecha devolución prevista
+    //===================================================
 
     echo "<tr>";
     echo "<td>Fecha devolución prevista:</td>";
@@ -106,7 +130,9 @@ function MostrarFormularioPrestamo()
     echo "</td>";
     echo "</tr>";
 
-    // ---------------- OBSERVACIONES ----------------
+    //===================================================
+    // Observaciones
+    //===================================================
 
     echo "<tr>";
     echo "<td>Observaciones:</td>";
@@ -115,14 +141,13 @@ function MostrarFormularioPrestamo()
     echo "</td>";
     echo "</tr>";
 
-    // ---------------- BOTÓN ENVIAR ----------------
+    //===================================================
+    // Botón
+    //===================================================
 
     echo "<tr>";
     echo "<td colspan='2' align='center'>";
-
-    // Al presionar este botón se enviarán los datos al archivo procesarPrestamo.php
     echo "<input type='submit' value='Solicitar Préstamo'>";
-
     echo "</td>";
     echo "</tr>";
 
@@ -131,13 +156,5 @@ function MostrarFormularioPrestamo()
     echo "</fieldset>";
 
     echo "</form>";
-
-    // Cierro la conexión a la base de datos
-    $conexion->cerrarConexion();
 }
-
-
-// Llamo a la función para mostrar el formulario
-MostrarFormularioPrestamo();
-
 ?>
