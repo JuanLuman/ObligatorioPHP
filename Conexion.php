@@ -3,38 +3,45 @@
 
 class ConexionBD {
     private $localhost = "localhost";
+    private $base = "techrent";
     private $usuario = "root";
     private $password = "";
-    private $base = "obligatorio2026";
     private $conn = null;
 
 
-public function conectar() {
-    // crear la conexión
-    $this->conn = mysqli_connect($this->localhost, $this->usuario, $this->password, $this->base);
-}
-
-
-// getter y setter para $base
-public function getBase() {
-    return $this->base;
-}
-
-public function setBase($base) {
-    $this->base = $base;
-}
-
-
-
-
-// ejecutar una consulta
-public function ejecutarConsulta($consulta) {
-    if ($this->conn === null) { // si no hay conexión, la creo
-        $this->conectar();
+    // constructor
+    public function __construct() {
+        $this->conn = null;
     }
-    $resultado = mysqli_query($this->conn, $consulta);
-    return $resultado;
-}
+
+
+    //me conecto usando PDO
+    public function conectarPDO() {
+        $conn= new PDO("mysql:host=$this->localhost;dbname=$this->base", $this->usuario, $this->password);
+        $conn>setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        return $conn;
+    }
+
+
+    // metodo para preparar una consulta en PDO
+    public function prepararConsulta($consulta) {
+        $conn  = $this->conectarPDO();
+        $stmt = $conexion->prepare($consulta);
+        return $stmt;
+    }
+
+
+    //metodo para ejecutar una consulta en PDO
+    public function ejecutarConsulta($consulta) {
+        if($this->conn === null) {
+            $this->conectarPDO();
+        }
+        $stmt = $this->prepararConsulta($consulta);
+        $stmt->execute();
+        return $stmt;
+    }
+
+
 
 
 

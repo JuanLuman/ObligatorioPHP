@@ -2,6 +2,65 @@
 // debo verificar que el usuario sea un funcionario antes de mostrar la página principal de funcionario
 session_start();
 
+// creo metodo para validad luego del login
+
+if (isset($_POST["Ingresar"])) {
+
+    $email = trim($_POST['email']); // quitar espacios al inicio y final de $_POST['email'];
+    $password = md5($_POST['password']);
+
+
+    // creo funcion para validar
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if (isset($_SESSION['tipo_usuario']) && $_SESSION['tipo_usuario'] == 'funcionario') {
      //aca va el código para mostrar la pantalla principal de funcionario
 

@@ -229,6 +229,14 @@ class Usuario {
         return $lista;
     }
 
+
+
+
+    //creo metodo para validar el tipo de usuario
+    public function esFuncionario() {
+        return $this->tipoUsuario === 'F';
+    }
+
 }
 
 ?>
