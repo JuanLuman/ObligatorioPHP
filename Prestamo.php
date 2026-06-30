@@ -3,8 +3,8 @@
 class Prestamo
 {
     private $idPrestamo;
-    private $equipo;
-    private $funcionario;
+    private $idEquipo;
+    private $idFuncionario;
     private $fechaPrestamo;
     private $fechaDevolucionPrevista;
     private $fechaDevolucionReal;
@@ -13,9 +13,9 @@ class Prestamo
 
 
     public function __construct(
-        $equipo, $funcionario, $fechaPrestamo, $fechaDevolucionPrevista, $observaciones = "") {
-        $this->equipo = $equipo;
-        $this->funcionario = $funcionario;
+        $idEquipo, $idFuncionario, $fechaPrestamo, $fechaDevolucionPrevista, $observaciones = "") {
+        $this->idEquipo = $idEquipo;
+        $this->idFuncionario = $idFuncionario;
         $this->fechaPrestamo = $fechaPrestamo;
         $this->fechaDevolucionPrevista = $fechaDevolucionPrevista;
         $this->observaciones = $observaciones;
@@ -27,8 +27,8 @@ class Prestamo
     /* ==================== GETTERS ==================== */
 
     public function getIdPrestamo() { return $this->idPrestamo; }
-    public function getEquipo() { return $this->equipo; }
-    public function getFuncionario() { return $this->funcionario; }
+    public function getEquipo() { return $this->idEquipo; }
+    public function getFuncionario() { return $this->idFuncionario; }
     public function getFechaPrestamo() { return $this->fechaPrestamo; }
     public function getFechaDevolucionPrevista() { return $this->fechaDevolucionPrevista; }
     public function getFechaDevolucionReal() { return $this->fechaDevolucionReal; }
@@ -38,8 +38,8 @@ class Prestamo
     /* ==================== SETTERS ==================== */
 
     public function setIdPrestamo($idPrestamo) { $this->idPrestamo = $idPrestamo; }
-    public function setEquipo($equipo) { $this->equipo = $equipo; }
-    public function setFuncionario($funcionario) { $this->funcionario = $funcionario; }
+    public function setEquipo($idEquipo) { $this->idEquipo = $idEquipo; }
+    public function setFuncionario($idFuncionario) { $this->idFuncionario = $idFuncionario; }
     public function setFechaPrestamo($fechaPrestamo) { $this->fechaPrestamo = $fechaPrestamo; }
     public function setFechaDevolucionPrevista($fecha) { $this->fechaDevolucionPrevista = $fecha; }
     public function setFechaDevolucionReal($fecha) { $this->fechaDevolucionReal = $fecha; }
@@ -47,36 +47,138 @@ class Prestamo
 
 
 
-    //creo el metodo para obtener los prestamos activos del funcionario
-    public function ObtenerPrestamosActivos($id_funcionario) {
+    public function registrarPrestamo()
+    {
+    require_once "Conexion.php";
 
-        $conexion = new ConexionBD();
-        $conexion->conectar();
+    $conexion = new ConexionBD();
+    $conexion->conectar();
 
-        $consulta = "SELECT p.id_prestamo,
-                            p.id_funcionario,
-                            p.id_equipo,
-                            p.fecha_prestamo,
-                            p.fecha_devolucion_prevista,
-                            p.fecha_devolucion_real,
-                            p.estado,
-                            e.foto,
-                            e.codigo_inventario,
-                            e.marca,
-                            e.modelo
-        FROM prestamos p
-        INNER JOIN equipos e ON p.id_equipo = e.id_equipo
-        WHERE id_funcionario = $id_funcionario AND P.estado = 'activo'";
+    // Validación de fechas
+    if ($this->fechaPrestamo >= $this->fechaDevolucionPrevista)
+    {
+        $conexion->cerrarConexion();
+        return "La fecha de devolución prevista debe ser posterior a la fecha del préstamo.";
+    }
 
-        $resultado = $conexion->ejecutarConsulta($consulta);
+    $consulta = "INSERT INTO prestamos
+                 (id_equipo, id_funcionario, fecha_prestamo,
+                  fecha_devolucion_prevista, observaciones)
+                 VALUES
+                 ($this->idEquipo,
+                  $this->idFuncionario,
+                  '$this->fechaPrestamo',
+                  '$this->fechaDevolucionPrevista',
+                  '$this->observaciones')";
+
+    $resultado = $conexion->ejecutarConsulta($consulta);
+
+    if ($resultado)
+    {
+        // Actualizar el estado del equipo
+        $consulta = "UPDATE equipos
+                     SET estado='Prestado'
+                     WHERE id_equipo=$this->idEquipo";
+
+        $conexion->ejecutarConsulta($consulta);
 
         $conexion->cerrarConexion();
-        return $resultado;
+        return true;
+    }
+
+    $conexion->cerrarConexion();
+
+    return "No fue posible registrar el préstamo.";
+
     }
 
 
-   
+public static function listarPrestamosActivos($idFuncionario)
+{
+    require_once "Conexion.php";
 
-    
+    $conexion = new ConexionBD();
+    $conexion->conectar();
+
+    $consulta = "SELECT
+                    p.id_prestamo,
+                    p.id_equipo,
+                    p.id_funcionario,
+                    p.fecha_prestamo,
+                    p.fecha_devolucion_prevista,
+                    e.codigo_inventario,
+                    e.marca,
+                    e.modelo
+                 FROM prestamos p
+                 INNER JOIN equipos e
+                    ON p.id_equipo = e.id_equipo
+                 WHERE p.id_funcionario = $idFuncionario
+                   AND p.fecha_devolucion_real IS NULL
+                 ORDER BY p.fecha_prestamo";
+
+    $resultado = $conexion->ejecutarConsulta($consulta);
+
+    $lista = array();
+
+    while ($fila = mysqli_fetch_assoc($resultado))
+    {
+        $lista[] = $fila;
+    }
+
+    $conexion->cerrarConexion();
+
+    return $lista;
+}
+
+// Registrar la devolución de un préstamo
+public function registrarDevolucion()
+{
+    // Incluyo la clase de conexión
+    require_once "Conexion.php";
+
+    // Creo el objeto conexión
+    $conexion = new ConexionBD();
+    $conexion->conectar();
+
+
+    // Registrar la fecha real de devolución
+    $consulta = "
+        UPDATE prestamos
+        SET fecha_devolucion_real = CURDATE()
+        WHERE id_prestamo = $this->idPrestamo
+          AND fecha_devolucion_real IS NULL
+    ";
+
+    $resultado = $conexion->ejecutarConsulta($consulta);
+
+    // Si no se pudo actualizar el préstamo
+    if (!$resultado)
+    {
+        $conexion->cerrarConexion();
+        return "No fue posible registrar la devolución.";
+    }
+
+
+    // Volver a dejar el equipo disponible
+
+    $consulta = "
+        UPDATE equipos
+        SET estado = 'Disponible'
+        WHERE id_equipo = $this->idEquipo
+    ";
+
+    $resultado = $conexion->ejecutarConsulta($consulta);
+
+    // Cierro la conexión
+    $conexion->cerrarConexion();
+
+    // Verifico el resultado
+    if ($resultado)
+    {
+        return true;
+    }
+
+    return "No fue posible actualizar el estado del equipo.";
+}
 }
 ?>
