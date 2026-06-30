@@ -48,7 +48,7 @@ class Prestamo
 
 
     public function registrarPrestamo()
-{
+    {
     require_once "Conexion.php";
 
     $conexion = new ConexionBD();
@@ -89,5 +89,96 @@ class Prestamo
     $conexion->cerrarConexion();
 
     return "No fue posible registrar el préstamo.";
+
+    }
+
+
+public static function listarPrestamosActivos($idFuncionario)
+{
+    require_once "Conexion.php";
+
+    $conexion = new ConexionBD();
+    $conexion->conectar();
+
+    $consulta = "SELECT
+                    p.id_prestamo,
+                    p.id_equipo,
+                    p.id_funcionario,
+                    p.fecha_prestamo,
+                    p.fecha_devolucion_prevista,
+                    e.codigo_inventario,
+                    e.marca,
+                    e.modelo
+                 FROM prestamos p
+                 INNER JOIN equipos e
+                    ON p.id_equipo = e.id_equipo
+                 WHERE p.id_funcionario = $idFuncionario
+                   AND p.fecha_devolucion_real IS NULL
+                 ORDER BY p.fecha_prestamo";
+
+    $resultado = $conexion->ejecutarConsulta($consulta);
+
+    $lista = array();
+
+    while ($fila = mysqli_fetch_assoc($resultado))
+    {
+        $lista[] = $fila;
+    }
+
+    $conexion->cerrarConexion();
+
+    return $lista;
+}
+
+// Registrar la devolución de un préstamo
+public function registrarDevolucion()
+{
+    // Incluyo la clase de conexión
+    require_once "Conexion.php";
+
+    // Creo el objeto conexión
+    $conexion = new ConexionBD();
+    $conexion->conectar();
+
+
+    // Registrar la fecha real de devolución
+    $consulta = "
+        UPDATE prestamos
+        SET fecha_devolucion_real = CURDATE()
+        WHERE id_prestamo = $this->idPrestamo
+          AND fecha_devolucion_real IS NULL
+    ";
+
+    $resultado = $conexion->ejecutarConsulta($consulta);
+
+    // Si no se pudo actualizar el préstamo
+    if (!$resultado)
+    {
+        $conexion->cerrarConexion();
+        return "No fue posible registrar la devolución.";
+    }
+
+
+    // Volver a dejar el equipo disponible
+
+    $consulta = "
+        UPDATE equipos
+        SET estado = 'Disponible'
+        WHERE id_equipo = $this->idEquipo
+    ";
+
+    $resultado = $conexion->ejecutarConsulta($consulta);
+
+    // Cierro la conexión
+    $conexion->cerrarConexion();
+
+    // Verifico el resultado
+    if ($resultado)
+    {
+        return true;
+    }
+
+    return "No fue posible actualizar el estado del equipo.";
+}
 }
 ?>
