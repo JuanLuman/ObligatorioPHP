@@ -1,5 +1,0 @@
-<?php
-// ingreso la clase 
-
-
-?>

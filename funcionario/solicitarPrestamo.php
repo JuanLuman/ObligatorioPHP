@@ -6,12 +6,18 @@ session_start();
 
 // Verifico que exista una sesión activa y que el usuario sea funcionario
 // Si no cumple la condición, lo redirijo al login
+
+//creo el objeto funcionario para validar que el usuario logueado es un funcionario
+require_once __DIR__ . '/../conexion/ConexionBD.php';
+$conexion = new ConexionBD();
+
 if (!isset($_SESSION['tipo_usuario']) || $_SESSION['tipo_usuario'] != 'funcionario') {
-    header("Location: login.html?error=No tienes permisos para acceder a esta página");
+    header("Location: login.php?error=No tienes permisos para acceder a esta página");
     exit();
 }
 
 
+<<<<<<< HEAD:solicitarPrestamo.php
 // Incluyo la clase encargada de la conexión a la base de datos
 require_once "Conexion.php";
 
@@ -19,10 +25,13 @@ require_once "Conexion.php";
 require_once "Equipo.php";
 require_once "Prestamo.php";
 
+=======
+>>>>>>> 0870a7b (creacion de carpetas, archivos nuevos, correccion conexion y login):funcionario/solicitarPrestamo.php
 // Título de la página
 echo "<h2>Solicitud de Préstamo - TechRent</h2>";
 
 
+<<<<<<< HEAD:solicitarPrestamo.php
 // =====================================================
 // Si el usuario envió el formulario, registro el préstamo
 // =====================================================
@@ -46,6 +55,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo "<p align='center' style='color:green'><b>Préstamo registrado correctamente.</b></p>";
     } else {
         echo "<p align='center' style='color:red'><b>$resultado</b></p>";
+=======
+// Función encargada de mostrar el formulario
+function MostrarFormularioPrestamo(){
+  
+    global $conexion;
+
+
+    // Abro la conexión con PDO para poder ejecutar consultas
+    $conexion->conectarPDO();
+
+    // Verifico que la conexión se haya realizado correctamente
+    if ($conexion->conectarPDO() === false) {
+        die("Error al conectar a la base de datos");
+>>>>>>> 0870a7b (creacion de carpetas, archivos nuevos, correccion conexion y login):funcionario/solicitarPrestamo.php
     }
 }
 
@@ -55,6 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 $equipos = Equipo::listarDisponibles($_SESSION["id_sucursal"]);
 
+<<<<<<< HEAD:solicitarPrestamo.php
 // =====================================================
 // Muestro el formulario
 // =====================================================
@@ -72,6 +96,10 @@ function MostrarFormularioPrestamo($equipos)
     echo "<h2 align='center'>Solicitud de Préstamo - TechRent</h2>";
 
     echo "<form method='POST'>";
+=======
+    // Comienzo el formulario
+    echo "<form action='administrador/procesarPrestamo.php' method='POST'>";
+>>>>>>> 0870a7b (creacion de carpetas, archivos nuevos, correccion conexion y login):funcionario/solicitarPrestamo.php
 
     echo "<fieldset>";
     echo "<legend align='center'>Datos del préstamo</legend>";
