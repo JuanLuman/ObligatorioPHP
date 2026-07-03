@@ -10,9 +10,11 @@ if ($_SESSION['tipo_usuario'] !== 'funcionario') {
 require_once "../clases/Usuario.php";
 require_once "../clases/Prestamo.php";
 
-$usuario = Usuario->cargar($_SESSION['id_usuario']);
-$prestamosActivos = Prestamo->obtenerPrestamosActivos($_SESSION['id_usuario']);
+$usuario = Usuario::cargar($_SESSION['ci']);
+$prestamosActivos = $usuario->obtenerPrestamosActivos();
 ?>
+
+
 <!DOCTYPE html>
 <html lang="es">
 <head>

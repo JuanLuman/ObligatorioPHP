@@ -1,8 +1,10 @@
 <?php
+//validacion de sesion
+session_start();
 
 require_once __DIR__ . "/../Conexion.php";
 
-class Sucursal {
+class Sucursal extends ConexionBD {
 
     private $idSucursal;
     private $nombre;
@@ -34,8 +36,8 @@ class Sucursal {
 
     // guardar: si no tiene id, hace INSERT; si tiene, hace UPDATE
     public function guardar() {
-        $conexion = new ConexionBD();
-        $conexion->conectar();
+        // $conexion = new ConexionBD();
+        // $conexion->conectar();
 
         if ($this->idSucursal === null) {
             $consulta = "INSERT INTO sucursales (nombre, direccion, telefono)
@@ -48,8 +50,8 @@ class Sucursal {
                          WHERE id_sucursal = $this->idSucursal";
         }
 
-        $resultado = $conexion->ejecutarConsulta($consulta);
-        $conexion->cerrarConexion();
+        $resultado = $this->ejecutarConsulta($consulta);
+        $this->cerrarConexion();
         return $resultado;
     }
 
@@ -57,23 +59,24 @@ class Sucursal {
 
     // cargar: trae los datos desde la base segun el id y los carga en el objeto
     public function cargar($id) {
-        $conexion = new ConexionBD();
-        $conexion->conectar();
+        // $conexion = new ConexionBD();
+        // $conexion->conectar();
 
         $consulta = "SELECT * FROM sucursales WHERE id_sucursal = $id";
-        $resultado = $conexion->ejecutarConsulta($consulta);
+        $resultado = $this->ejecutarConsulta($consulta);
 
-        if ($resultado && mysqli_num_rows($resultado) > 0) {
-            $fila = mysqli_fetch_array($resultado, MYSQLI_ASSOC);
+        if ($resultado && count($resultado) > 0) {
+            $fila = fetch($resultado, MYSQLI_ASSOC);
             $this->idSucursal = $fila['id_sucursal'];
             $this->nombre    = $fila['nombre'];
             $this->direccion = $fila['direccion'];
             $this->telefono  = $fila['telefono'];
-            $conexion->cerrarConexion();
+
+            $this->cerrarConexion();
             return true;
         }
 
-        $conexion->cerrarConexion();
+        $this->cerrarConexion();
         return false;
     }
 
@@ -85,11 +88,12 @@ class Sucursal {
             return false;
         }
 
-        $conexion = new ConexionBD();
-        $conexion->conectar();
+        // $conexion = new ConexionBD();
+        // $conexion->conectar();
         $consulta = "DELETE FROM sucursales WHERE id_sucursal = $this->idSucursal";
-        $resultado = $conexion->ejecutarConsulta($consulta);
-        $conexion->cerrarConexion();
+        $resultado = $this->ejecutarConsulta($consulta);
+
+        $this->cerrarConexion();
         return $resultado;
     }
 
@@ -97,14 +101,15 @@ class Sucursal {
 
     // listarTodas: devuelve un array de objetos Sucursal con todas las sucursales
     public static function listarTodas() {
-        $conexion = new ConexionBD();
-        $conexion->conectar();
+        // $conexion = new ConexionBD();
+        // $conexion->conectar();
 
         $consulta = "SELECT * FROM sucursales ORDER BY nombre";
-        $resultado = $conexion->ejecutarConsulta($consulta);
+        $resultado = $this->ejecutarConsulta($consulta);
 
         $lista = [];
-        while ($fila = mysqli_fetch_array($resultado, MYSQLI_ASSOC)) {
+        while ($fila = fetch($resultado, MYSQLI_ASSOC)) {
+
             $s = new Sucursal();
             $s->setIdSucursal($fila['id_sucursal']);
             $s->setNombre($fila['nombre']);
@@ -113,7 +118,7 @@ class Sucursal {
             $lista[] = $s;
         }
 
-        $conexion->cerrarConexion();
+        $this->cerrarConexion();
         return $lista;
     }
 

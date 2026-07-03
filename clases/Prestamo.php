@@ -9,7 +9,7 @@ class Prestamo
 =======
 require_once __DIR__ . "/../conexion/Conexion.php";
 
-class Prestamo
+class Prestamo extends ConexionBD
 {
     private $idPrestamo;
     private $equipo;
@@ -235,8 +235,8 @@ public function registrarDevolucion()
        ejecutamos directo sobre la conexión PDO cruda, sin pasar por
        ejecutarConsulta() (que ahora solo sirve para SQL fijo). */
 
-    public static function obtenerPrestamosActivos($ciFuncionario) {
-        $conn = (new ConexionBD())->conectar();
+    public function obtenerPrestamosActivos($ciFuncionario) {
+        //$conn = (new ConexionBD())->conectar();
 
         $sql = "SELECT p.id_prestamo,
                        p.fecha_prestamo,
@@ -251,10 +251,14 @@ public function registrarDevolucion()
                 WHERE p.id_funcionario = ?
                   AND p.fecha_devolucion_real IS NULL";
 
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([$ciFuncionario]);
+        $prepare = $this->prepare($sql);
+        $resultado = $prepare->execute([$ciFuncionario]); // Ejecuta la consulta con el parámetro
 
-        $prestamos = $stmt->fetchAll();
+        if (!$resultado) {
+            throw new Exception("Error al ejecutar la consulta: " . implode(", ", $prepare->errorInfo()));
+        }
+
+        $prestamos = $prepare->fetchAll(); // Devuelve un array de arrays asociativos
         foreach ($prestamos as &$fila) {
             $fila['estado'] = self::calcularEstado($fila['fecha_devolucion_prevista']);
         }
@@ -263,7 +267,7 @@ public function registrarDevolucion()
     }
 
     public static function obtenerHistorialPorFuncionario($ciFuncionario) {
-        $conn = (new ConexionBD())->conectar();
+       // $conn = (new ConexionBD())->conectar();
 
         $sql = "SELECT p.id_prestamo,
                        p.fecha_prestamo,
@@ -278,10 +282,11 @@ public function registrarDevolucion()
                 WHERE p.id_funcionario = ?
                 ORDER BY p.fecha_devolucion_prevista DESC";
 
-        $stmt = $conn->prepare($sql);
+        $stmt = $this->prepare($sql);
         $stmt->execute([$ciFuncionario]);
 
         $prestamos = $stmt->fetchAll();
+
         foreach ($prestamos as &$fila) {
             $fila['estado'] = $fila['fecha_devolucion_real'] !== null
                 ? "Devuelto"
@@ -293,7 +298,7 @@ public function registrarDevolucion()
 
     // Sin valores variables: puede usar ejecutarConsulta() directo
     public static function obtenerHistorialCompleto() {
-        $conexion = new ConexionBD();
+        // $conexion = new ConexionBD();
 
         $sql = "SELECT p.id_prestamo,
                        p.fecha_prestamo,
@@ -309,9 +314,10 @@ public function registrarDevolucion()
                 INNER JOIN usuarios u ON p.id_funcionario = u.ci
                 ORDER BY p.fecha_devolucion_prevista DESC";
 
-        $stmt = $conexion->ejecutarConsulta($sql);
+        $stmt = $this->ejecutarConsulta($sql);
 
         $prestamos = $stmt->fetchAll();
+        
         foreach ($prestamos as &$fila) {
             $fila['estado'] = $fila['fecha_devolucion_real'] !== null
                 ? "Devuelto"
@@ -322,7 +328,7 @@ public function registrarDevolucion()
     }
 
     public static function obtenerDetalle($idPrestamo) {
-        $conn = (new ConexionBD())->conectar();
+        // $conn = (new ConexionBD())->conectar();
 
         $sql = "SELECT p.*,
                        u.primer_nombre, u.primer_apellido,
@@ -332,7 +338,7 @@ public function registrarDevolucion()
                 INNER JOIN usuarios u ON p.id_funcionario = u.ci
                 WHERE p.id_prestamo = ?";
 
-        $stmt = $conn->prepare($sql);
+        $stmt = $this->prepare($sql);
         $stmt->execute([$idPrestamo]);
         $fila = $stmt->fetch();
 
@@ -345,10 +351,12 @@ public function registrarDevolucion()
         return $fila; // false si no existe
     }
 
-    public static function contarPrestamosActivos($ciFuncionario) {
-        $conn = (new ConexionBD())->conectar();
 
-        $stmt = $conn->prepare(
+
+    public static function contarPrestamosActivos($ciFuncionario) {
+       // $conn = (new ConexionBD())->conectar();
+
+        $stmt = $this->prepare(
             "SELECT COUNT(*) AS total FROM prestamos
              WHERE id_funcionario = ? AND fecha_devolucion_real IS NULL"
         );
@@ -357,10 +365,13 @@ public function registrarDevolucion()
         return (int) $stmt->fetch()['total'];
     }
 
-    private static function equipoTienePrestamoActivo($idEquipo) {
-        $conn = (new ConexionBD())->conectar();
 
-        $stmt = $conn->prepare(
+
+
+    private static function equipoTienePrestamoActivo($idEquipo) {
+        // $conn = (new ConexionBD())->conectar();
+
+        $stmt = $this->prepare(
             "SELECT COUNT(*) AS total FROM prestamos
              WHERE id_equipo = ? AND fecha_devolucion_real IS NULL"
         );
@@ -378,13 +389,13 @@ public function registrarDevolucion()
             return $errores;
         }
 
-        $conn = (new ConexionBD())->conectar();
+        // $conn = (new ConexionBD())->conectar();
 
         $sql = "INSERT INTO prestamos
                     (id_equipo, id_funcionario, fecha_prestamo, fecha_devolucion_prevista, observaciones, fecha_creacion)
                 VALUES (?, ?, ?, ?, ?, ?)";
 
-        $stmt = $conn->prepare($sql);
+        $stmt = $this->prepare($sql);
         $stmt->execute([
             $this->equipo,
             $this->funcionario,
@@ -404,10 +415,13 @@ public function registrarDevolucion()
         return [];
     }
 
-    public static function registrarDevolucion($idPrestamo) {
-        $conn = (new ConexionBD())->conectar();
 
-        $stmt = $conn->prepare(
+
+
+    public static function registrarDevolucion($idPrestamo) {
+        // $conn = (new ConexionBD())->conectar();
+
+        $stmt = $this->prepare(
             "SELECT id_equipo FROM prestamos WHERE id_prestamo = ? AND fecha_devolucion_real IS NULL"
         );
         $stmt->execute([$idPrestamo]);
@@ -417,7 +431,7 @@ public function registrarDevolucion()
             return ["El préstamo no existe o ya fue devuelto"];
         }
 
-        $stmt = $conn->prepare("UPDATE prestamos SET fecha_devolucion_real = ? WHERE id_prestamo = ?");
+        $stmt = $this->prepare("UPDATE prestamos SET fecha_devolucion_real = ? WHERE id_prestamo = ?");
         $stmt->execute([date('Y-m-d'), $idPrestamo]);
 
         require_once __DIR__ . '/Equipo.php';
@@ -428,6 +442,8 @@ public function registrarDevolucion()
 
         return [];
     }
+
+
 
     private function validarReglasNegocio() {
         $errores = [];

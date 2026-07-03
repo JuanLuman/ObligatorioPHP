@@ -1,8 +1,10 @@
 <?php
 
 require_once __DIR__ . "/../Conexion.php";
+//equipo herreda de la conexion
 
-class Equipo {
+
+class Equipo extends ConexionBD {
 
     // constantes para evitar typos en los estados
     const ESTADO_DISPONIBLE    = 'Disponible';
@@ -65,8 +67,8 @@ class Equipo {
 
     // guardar: INSERT si no tiene id, UPDATE si tiene
     public function guardar() {
-        $conexion = new ConexionBD();
-        $conexion->conectar();
+        //$conexion = new ConexionBD();
+        //$conexion->conectar();
 
         if ($this->idEquipo === null) {
             $consulta = "INSERT INTO equipos
@@ -89,8 +91,12 @@ class Equipo {
                          WHERE id_equipo = $this->idEquipo";
         }
 
-        $resultado = $conexion->ejecutarConsulta($consulta);
-        $conexion->cerrarConexion();
+        
+        
+       // $resultado = $conexion->ejecutarConsulta($consulta);
+        $resultado = $this->ejecutarConsulta($consulta);
+        $this->cerrarConexion();
+       // $this->conexion->cerrarConexion();
         return $resultado;
     }
 
@@ -98,14 +104,14 @@ class Equipo {
 
     // cargar: trae los datos del equipo por id
     public function cargar($id) {
-        $conexion = new ConexionBD();
-        $conexion->conectar();
+       // $conexion = new ConexionBD();
+       // $conexion->conectar();
 
         $consulta = "SELECT * FROM equipos WHERE id_equipo = $id";
-        $resultado = $conexion->ejecutarConsulta($consulta);
+        $resultado = $this->ejecutarConsulta($consulta);
 
-        if ($resultado && mysqli_num_rows($resultado) > 0) {
-            $fila = mysqli_fetch_array($resultado, MYSQLI_ASSOC);
+        if ($resultado && count($resultado) > 0) {
+            $fila = fetch_array($resultado, MYSQLI_ASSOC);
             $this->idEquipo         = $fila['id_equipo'];
             $this->codigoInventario = $fila['codigo_inventario'];
             $this->marca            = $fila['marca'];
@@ -116,11 +122,12 @@ class Equipo {
             $this->estado           = $fila['estado'];
             $this->idSucursal       = $fila['id_sucursal'];
             $this->foto             = $fila['foto'];
-            $conexion->cerrarConexion();
+
+            $this->cerrarConexion();
             return true;
         }
 
-        $conexion->cerrarConexion();
+        $this->cerrarConexion();
         return false;
     }
 
@@ -131,12 +138,16 @@ class Equipo {
         if ($this->idEquipo === null) {
             return false;
         }
-        $conexion = new ConexionBD();
-        $conexion->conectar();
+
+        //$conexion = new ConexionBD();
+        //$conexion->conectar();
+
         $consulta = "DELETE FROM equipos WHERE id_equipo = $this->idEquipo";
-        $resultado = $conexion->ejecutarConsulta($consulta);
-        $conexion->cerrarConexion();
+        $resultado = $this->ejecutarConsulta($consulta);
+
+        $this->cerrarConexion();
         return $resultado;
+        
     }
 
 
@@ -151,14 +162,14 @@ class Equipo {
 
     // listar todos los equipos
     public static function listarTodos() {
-        $conexion = new ConexionBD();
-        $conexion->conectar();
+        //$conexion = new ConexionBD();
+        //$conexion->conectar();
 
         $consulta = "SELECT * FROM equipos ORDER BY id_equipo";
-        $resultado = $conexion->ejecutarConsulta($consulta);
+        $resultado = $this->ejecutarConsulta($consulta);
 
         $lista = self::resultadoAArray($resultado);
-        $conexion->cerrarConexion();
+        $this->cerrarConexion();
         return $lista;
     }
 
@@ -166,17 +177,17 @@ class Equipo {
 
     // listar solo equipos disponibles de una sucursal (lo usa el funcionario al solicitar prestamo)
     public static function listarDisponibles($idSucursal) {
-        $conexion = new ConexionBD();
-        $conexion->conectar();
+        //$conexion = new ConexionBD();
+        //$conexion->conectar();
 
         $estado = self::ESTADO_DISPONIBLE;
         $consulta = "SELECT * FROM equipos
                      WHERE estado = '$estado' AND id_sucursal = $idSucursal
                      ORDER BY marca, modelo";
-        $resultado = $conexion->ejecutarConsulta($consulta);
+        $resultado = $this->ejecutarConsulta($consulta);
 
         $lista = self::resultadoAArray($resultado);
-        $conexion->cerrarConexion();
+        $this->cerrarConexion();
         return $lista;
     }
 
@@ -185,6 +196,7 @@ class Equipo {
     // helper privado para mapear filas a objetos Equipo
     private static function resultadoAArray($resultado) {
         $lista = [];
+        
         while ($fila = mysqli_fetch_array($resultado, MYSQLI_ASSOC)) {
             $e = new Equipo();
             $e->setIdEquipo($fila['id_equipo']);

@@ -1,9 +1,10 @@
 <?php
+session_start();
 
-require_once __DIR__ . "/../conexion/Conexion.php"; // dentro de la carpeta conexion 
+require_once __DIR__ . "/../conexion/Conexion.php"; 
 
 
-class Usuario {
+class Usuario extends ConexionBD {
 
     // constantes para los tipos de usuario
     const TIPO_ADMINISTRADOR = 'administrador';
@@ -108,14 +109,15 @@ class Usuario {
     public function guardar() {
 
         // me conecto a la base con la clase ConexionBD que se conecto usando PDO
-        require_once __DIR__ . "/../conexion/Conexion.php";
+        //require_once __DIR__ . "/../conexion/Conexion.php";
 
-        $conexion = new ConexionBD();
-        $conexion->conectar();
+        //$conexion = new ConexionBD();
+        //$conexion->conectar();
 
-        // detectar si ya existe en la base buscando por ci
-        $check = $conexion->ejecutarConsulta("SELECT ci FROM usuarios WHERE ci = '$this->ci'"); 
-        $existe = $check && mysqli_num_rows($check) > 0; //
+        // Si el usuario no tiene ci, es nuevo y hago INSERT
+        // como herredo de ConexionBD, puedo usar $this->ejecutarConsulta() directamente
+        $check = $this->ejecutarConsulta("SELECT ci FROM usuarios WHERE ci = '$this->ci'"); 
+        $existe = $check && count($check) > 0; //
 
         if (!$existe) {
             $consulta = "INSERT INTO usuarios
@@ -142,8 +144,8 @@ class Usuario {
                          WHERE ci = '$this->ci'";
         }
 
-        $resultado = $conexion->ejecutarConsulta($consulta);
-        $conexion->cerrarConexion();
+        $resultado = $this->ejecutarConsulta($consulta);
+        $this->cerrarConexion();
         return $resultado;
     }
 
@@ -151,12 +153,12 @@ class Usuario {
 
     // cargar: busca el usuario por ci y llena los atributos
     public function cargar($ci) {
-        $conexion = new ConexionBD();
-        $conexion->conectar();
+        //$conexion = new ConexionBD();
+        //$conexion->conectar();
 
         $consulta = "SELECT * FROM usuarios WHERE ci = '$ci'"; // utilizo FDO para compatibilidad con PDO
         
-        $resultado = $conexion->ejecutarConsulta($consulta);
+        $resultado = $this->ejecutarConsulta($consulta);
 
         if ($resultado && count($resultado) > 0) {
             $fila = fetch_array($resultado, MYSQLI_ASSOC);
@@ -172,11 +174,13 @@ class Usuario {
             $this->tipoUsuario     = $fila['tipo_usuario'];
             $this->idSucursal      = $fila['id_sucursal'];
             $this->activo          = $fila['activo'];
-            $conexion->cerrarConexion();
+
+            $this->cerrarConexion();
+
             return true;
         }
 
-        $conexion->cerrarConexion();
+        $this->cerrarConexion();
         return false;
     }
 
@@ -187,11 +191,13 @@ class Usuario {
         if ($this->ci === null) {
             return false;
         }
-        $conexion = new ConexionBD();
-        $conexion->conectar();
+       // $conexion = new ConexionBD();
+       // $conexion->conectar();
+
         $consulta = "UPDATE usuarios SET activo = 0 WHERE ci = '$this->ci'";
-        $resultado = $conexion->ejecutarConsulta($consulta);
-        $conexion->cerrarConexion();
+        $resultado = $this->ejecutarConsulta($consulta);
+
+        $this->cerrarConexion();
         $this->activo = 0;
         return $resultado;
     }
@@ -200,25 +206,25 @@ class Usuario {
 
     // autenticar: verifica email + password (compara contra md5 igual que validacion_login)
     public static function autenticar($email, $passwordPlano) {
-        $conexion = new ConexionBD();
-        $conexion->conectar();
+        // $conexion = new ConexionBD();
+        // $conexion->conectar();
 
         $hash = md5($passwordPlano);
         $consulta = "SELECT * FROM usuarios
                      WHERE email = '$email' AND password = '$hash' AND activo = 1";
 
-        $resultado = $conexion->ejecutarConsulta($consulta);
+        $resultado = $this->ejecutarConsulta($consulta);
 
         if ($resultado && count($resultado) > 0) { // utilizo count() en lugar de mysqli_num_rows() para compatibilidad con PDO
             $fila = fetch_array($resultado, MYSQLI_ASSOC); 
 
             $u = new Usuario();
             $u->cargar($fila['ci']);
-            $conexion->cerrarConexion();
+            $this->cerrarConexion();
             return $u;
         }
 
-        $conexion->cerrarConexion();
+        $this->cerrarConexion();
         return null;
     }
 
@@ -234,11 +240,11 @@ class Usuario {
 
     // listar todos los usuarios activos
     public static function listarTodos() {
-        $conexion = new ConexionBD();
-        $conexion->conectarPDO();
+        // $conexion = new ConexionBD();
+        // $conexion->conectarPDO();
 
         $consulta = "SELECT * FROM usuarios WHERE activo = 1 ORDER BY primer_apellido, primer_nombre";
-        $resultado = $conexion->ejecutarConsulta($consulta);
+        $resultado = $this->ejecutarConsulta($consulta);
 
         $lista = [];
         while ($fila = mysqli_fetch_array($resultado, MYSQLI_ASSOC)) {
@@ -258,7 +264,7 @@ class Usuario {
             $lista[] = $u;
         }
 
-        $conexion->cerrarConexion();
+        $this->cerrarConexion();
         return $lista;
     }
 
