@@ -161,7 +161,7 @@ class Usuario extends ConexionBD {
         $resultado = $this->ejecutarConsulta($consulta);
 
         if ($resultado && count($resultado) > 0) {
-            $fila = fetch_array($resultado, MYSQLI_ASSOC);
+            $fila = $resultado->fetch(); // utilizo fetch() en lugar de mysqli_fetch_array() para compatibilidad con PDO
             $this->ci              = $fila['ci'];
             $this->primerName    = $fila['primer_nombre'];
             $this->segundoName   = $fila['segundo_nombre'];
@@ -205,7 +205,7 @@ class Usuario extends ConexionBD {
 
 
     // autenticar: verifica email + password (compara contra md5 igual que validacion_login)
-    public static function autenticar($email, $passwordPlano) {
+    public function autenticar($email, $passwordPlano) {
         // $conexion = new ConexionBD();
         // $conexion->conectar();
 
@@ -247,7 +247,7 @@ class Usuario extends ConexionBD {
         $resultado = $this->ejecutarConsulta($consulta);
 
         $lista = [];
-        while ($fila = mysqli_fetch_array($resultado, MYSQLI_ASSOC)) {
+        while ($fila = $resultado->fetch()) { // utilizo fetch() en lugar de mysqli_fetch_array() para compatibilidad con PDO
             $u = new Usuario();
             $u->setCi($fila['ci']);
             $u->setPrimerNombre($fila['primer_nombre']);
