@@ -24,7 +24,7 @@ if (isset($_POST["Ingresar"])) {
     $email = trim($_POST['email']);
     $password = $_POST['password'];
 
-    $usuario = Usuario::autenticar($email, $password);
+    $usuario = (new Usuario())->autenticar($email, $password);
 
     if ($usuario === null) {
         $mensajeError = "Email o contraseña incorrectos.";
@@ -32,9 +32,14 @@ if (isset($_POST["Ingresar"])) {
         $_SESSION['id_usuario']    = $usuario->getCi();
         $_SESSION['primer_nombre'] = $usuario->getPrimerNombre();
         $_SESSION['tipo_usuario']  = $usuario->getTipoUsuario();
-        $_SESSION['ultimo_acceso'] = time();
+        $_SESSION['id_sucursal']   = $usuario->getIdSucursal();
 
-        $destino = ($usuario instanceof Administrador)
+        // Límite de inactividad según el rol (regla de negocio 10 del enunciado),
+        // controlado con una cookie en lugar de la sesión.
+        $limite = ($usuario->getTipoUsuario() === Usuario::TIPO_ADMINISTRADOR) ? 3600 : 900;
+        setcookie('ultimo_acceso', (string) time(), time() + $limite, '/');
+
+        $destino = ($usuario->getTipoUsuario() === Usuario::TIPO_ADMINISTRADOR)
             ? "administrador/inicio.php"
             : "funcionario/inicio.php";
 

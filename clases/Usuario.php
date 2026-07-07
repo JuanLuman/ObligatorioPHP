@@ -79,32 +79,6 @@ class Usuario extends ConexionBD {
     }
 
 
-      /* ==================== LÓGICA DE ESTADO ==================== */
-
-    /**
-     * Calcula el estado de un préstamo comparando la fecha de devolución
-     * prevista contra hoy. No se guarda en la base: se calcula al vuelo,
-     * como pide el enunciado (En fecha / Próximo a vencer / Vencido).
-     */
-    private static function calcularEstado($fechaDevolucionPrevista) {
-        $hoy = new DateTime();
-        $hoy->setTime(0, 0, 0);
-        $fechaPrevista = new DateTime($fechaDevolucionPrevista);
-
-        if ($hoy > $fechaPrevista) {
-            return "Vencido";
-        }
-
-        $diasRestantes = $hoy->diff($fechaPrevista)->days;
-        if ($diasRestantes <= 3) {
-            return "Próximo a vencer";
-        }
-
-        return "En fecha";
-    }
-
-
-
     // guardar: INSERT si es nuevo, UPDATE si ya existe
     public function guardar() {
 
@@ -116,8 +90,8 @@ class Usuario extends ConexionBD {
 
         // Si el usuario no tiene ci, es nuevo y hago INSERT
         // como herredo de ConexionBD, puedo usar $this->ejecutarConsulta() directamente
-        $check = $this->ejecutarConsulta("SELECT ci FROM usuarios WHERE ci = '$this->ci'"); 
-        $existe = $check && count($check) > 0; //
+        $check = $this->ejecutarConsulta("SELECT ci FROM usuarios WHERE ci = '$this->ci'");
+        $existe = $check && $check->fetch() !== false;
 
         if (!$existe) {
             $consulta = "INSERT INTO usuarios
@@ -159,12 +133,12 @@ class Usuario extends ConexionBD {
         $consulta = "SELECT * FROM usuarios WHERE ci = '$ci'"; // utilizo FDO para compatibilidad con PDO
         
         $resultado = $this->ejecutarConsulta($consulta);
+        $fila = $resultado ? $resultado->fetch() : false; // utilizo fetch() en lugar de mysqli_fetch_array() para compatibilidad con PDO
 
-        if ($resultado && count($resultado) > 0) {
-            $fila = $resultado->fetch(); // utilizo fetch() en lugar de mysqli_fetch_array() para compatibilidad con PDO
+        if ($fila) {
             $this->ci              = $fila['ci'];
-            $this->primerName    = $fila['primer_nombre'];
-            $this->segundoName   = $fila['segundo_nombre'];
+            $this->primerNombre    = $fila['primer_nombre'];
+            $this->segundoNombre   = $fila['segundo_nombre'];
             $this->primerApellido  = $fila['primer_apellido'];
             $this->segundoApellido = $fila['segundo_apellido'];
             $this->fechaNacimiento = $fila['fecha_nacimiento'];
@@ -214,10 +188,9 @@ class Usuario extends ConexionBD {
                      WHERE email = '$email' AND password = '$hash' AND activo = 1";
 
         $resultado = $this->ejecutarConsulta($consulta);
+        $fila = $resultado ? $resultado->fetch() : false; // utilizo fetch() en lugar de mysqli_num_rows()/mysqli_fetch_array() para compatibilidad con PDO
 
-        if ($resultado && count($resultado) > 0) { // utilizo count() en lugar de mysqli_num_rows() para compatibilidad con PDO
-            $fila = fetch_array($resultado, MYSQLI_ASSOC); 
-
+        if ($fila) {
             $u = new Usuario();
             $u->cargar($fila['ci']);
             $this->cerrarConexion();
@@ -239,10 +212,7 @@ class Usuario extends ConexionBD {
 
 
     // listar todos los usuarios activos
-    public static function listarTodos() {
-        // $conexion = new ConexionBD();
-        // $conexion->conectarPDO();
-
+    public function listarTodos() {
         $consulta = "SELECT * FROM usuarios WHERE activo = 1 ORDER BY primer_apellido, primer_nombre";
         $resultado = $this->ejecutarConsulta($consulta);
 
@@ -273,44 +243,7 @@ class Usuario extends ConexionBD {
 
     //creo metodo para validar el tipo de usuario
     public function esFuncionario() {
-        return $this->tipoUsuario === 'F';
-    }
-
-
-
-    /**
-     * Valida las reglas de negocio del enunciado antes de insertar un préstamo.
-     */
-    private function validarReglasNegocio() {
-        $errores = [];
-
-        if (self::contarPrestamosActivos($this->funcionario) >= 3) {
-            $errores[] = "El funcionario ya tiene 3 préstamos activos";
-        }
-
-        if (self::equipoTienePrestamoActivo($this->equipo)) {
-            $errores[] = "El equipo ya está asociado a un préstamo activo";
-        }
-
-        if (strtotime($this->fechaDevolucionPrevista) <= strtotime($this->fechaPrestamo)) {
-            $errores[] = "La fecha de devolución prevista debe ser posterior a la fecha de préstamo";
-        }
-
-        require_once __DIR__ . '/../clases/Equipo.php';
-        $equipo = new Equipo();
-
-        if ($equipo->cargar($this->equipo)) {
-            if ($equipo->getEstado() === Equipo::ESTADO_MANTENIMIENTO) {
-                $errores[] = "No se puede solicitar un equipo en mantenimiento";
-            }
-            if ($equipo->getEstado() === Equipo::ESTADO_BAJA) {
-                $errores[] = "No se puede solicitar un equipo dado de baja";
-            }
-        } else {
-            $errores[] = "El equipo indicado no existe";
-        }
-
-        return $errores;
+        return $this->tipoUsuario === self::TIPO_FUNCIONARIO;
     }
 
 }

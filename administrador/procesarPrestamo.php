@@ -5,7 +5,7 @@ session_start();
 
 
 // Incluyo la clase de conexión
-require_once "Conexion.php";
+require_once __DIR__ . "/../conexion/Conexion.php";
 
 
 // Recupero los datos enviados desde el formulario
@@ -66,7 +66,7 @@ $resultado = $conexion->ejecutarConsulta($consulta);
 
 
 // Verifico si realmente se insertó un registro
-if (mysqli_affected_rows($conexion->getConexion()) > 0)
+if ($resultado && $resultado->rowCount() > 0)
 {
     // Si el préstamo se registró correctamente,
     // actualizo el estado del equipo a Prestado

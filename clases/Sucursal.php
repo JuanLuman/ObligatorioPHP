@@ -2,7 +2,7 @@
 //validacion de sesion
 session_start();
 
-require_once __DIR__ . "/../Conexion.php";
+require_once __DIR__ . "/../conexion/Conexion.php";
 
 class Sucursal extends ConexionBD {
 
@@ -64,9 +64,9 @@ class Sucursal extends ConexionBD {
 
         $consulta = "SELECT * FROM sucursales WHERE id_sucursal = $id";
         $resultado = $this->ejecutarConsulta($consulta);
+        $fila = $resultado ? $resultado->fetch() : false;
 
-        if ($resultado && count($resultado) > 0) {
-            $fila = fetch($resultado, MYSQLI_ASSOC);
+        if ($fila) {
             $this->idSucursal = $fila['id_sucursal'];
             $this->nombre    = $fila['nombre'];
             $this->direccion = $fila['direccion'];
@@ -100,15 +100,12 @@ class Sucursal extends ConexionBD {
 
 
     // listarTodas: devuelve un array de objetos Sucursal con todas las sucursales
-    public static function listarTodas() {
-        // $conexion = new ConexionBD();
-        // $conexion->conectar();
-
+    public function listarTodas() {
         $consulta = "SELECT * FROM sucursales ORDER BY nombre";
         $resultado = $this->ejecutarConsulta($consulta);
 
         $lista = [];
-        while ($fila = fetch($resultado, MYSQLI_ASSOC)) {
+        while ($fila = $resultado->fetch()) {
 
             $s = new Sucursal();
             $s->setIdSucursal($fila['id_sucursal']);

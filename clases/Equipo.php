@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . "/../Conexion.php";
+require_once __DIR__ . "/../conexion/Conexion.php";
 //equipo herreda de la conexion
 
 
@@ -109,9 +109,9 @@ class Equipo extends ConexionBD {
 
         $consulta = "SELECT * FROM equipos WHERE id_equipo = $id";
         $resultado = $this->ejecutarConsulta($consulta);
+        $fila = $resultado ? $resultado->fetch() : false;
 
-        if ($resultado && count($resultado) > 0) {
-            $fila = fetch_array($resultado, MYSQLI_ASSOC);
+        if ($fila) {
             $this->idEquipo         = $fila['id_equipo'];
             $this->codigoInventario = $fila['codigo_inventario'];
             $this->marca            = $fila['marca'];
@@ -161,10 +161,7 @@ class Equipo extends ConexionBD {
 
 
     // listar todos los equipos
-    public static function listarTodos() {
-        //$conexion = new ConexionBD();
-        //$conexion->conectar();
-
+    public function listarTodos() {
         $consulta = "SELECT * FROM equipos ORDER BY id_equipo";
         $resultado = $this->ejecutarConsulta($consulta);
 
@@ -176,10 +173,7 @@ class Equipo extends ConexionBD {
 
 
     // listar solo equipos disponibles de una sucursal (lo usa el funcionario al solicitar prestamo)
-    public static function listarDisponibles($idSucursal) {
-        //$conexion = new ConexionBD();
-        //$conexion->conectar();
-
+    public function listarDisponibles($idSucursal) {
         $estado = self::ESTADO_DISPONIBLE;
         $consulta = "SELECT * FROM equipos
                      WHERE estado = '$estado' AND id_sucursal = $idSucursal
@@ -197,7 +191,7 @@ class Equipo extends ConexionBD {
     private static function resultadoAArray($resultado) {
         $lista = [];
         
-        while ($fila = mysqli_fetch_array($resultado, MYSQLI_ASSOC)) {
+        while ($fila = $resultado->fetch()) {
             $e = new Equipo();
             $e->setIdEquipo($fila['id_equipo']);
             $e->setCodigoInventario($fila['codigo_inventario']);

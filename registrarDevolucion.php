@@ -5,12 +5,12 @@ session_start();
 
 // Verifico que el usuario sea un funcionario
 if (!isset($_SESSION['tipo_usuario']) || $_SESSION['tipo_usuario'] != 'funcionario') {
-    header("Location: login.html?error=No tienes permisos para acceder a esta página");
+    header("Location: login.php?error=No tienes permisos para acceder a esta página");
     exit();
 }
 
 // Incluyo la clase Prestamo
-require_once "Prestamo.php";
+require_once __DIR__ . "/clases/Prestamo.php";
 
 
 //=======================================================
@@ -19,27 +19,16 @@ require_once "Prestamo.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST")
 {
-    // Creo el objeto préstamo
-    $prestamo = new Prestamo(
-        $_POST["id_equipo"],
-        $_SESSION["id_usuario"],
-        null,
-        null
-    );
+    // Registro la devolución (devuelve un array de errores, vacío si salió bien)
+    $errores = Prestamo::registrarDevolucion($_POST["id_prestamo"]);
 
-    // Cargo el ID del préstamo
-    $prestamo->setIdPrestamo($_POST["id_prestamo"]);
-
-    // Registro la devolución
-    $resultado = $prestamo->registrarDevolucion();
-
-    if ($resultado === true)
+    if (empty($errores))
     {
         echo "<p align='center' style='color:green'><b>Devolución registrada correctamente.</b></p>";
     }
     else
     {
-        echo "<p align='center' style='color:red'><b>$resultado</b></p>";
+        echo "<p align='center' style='color:red'><b>" . implode("<br>", array_map('htmlspecialchars', $errores)) . "</b></p>";
     }
 }
 
@@ -48,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 // Obtengo los préstamos activos del funcionario
 //=======================================================
 
-$prestamos = Prestamo::listarPrestamosActivos($_SESSION["id_usuario"]);
+$prestamos = Prestamo::obtenerPrestamosActivos($_SESSION["id_usuario"]);
 
 
 //=======================================================
