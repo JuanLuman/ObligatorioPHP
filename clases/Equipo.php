@@ -17,10 +17,10 @@ class Equipo {
     private $modelo;
     private $anioAdquisicion;
     private $valorEstimado;
+    // ojo: en la base la columna se llama tipo_equipo, aca la mantengo como $tipo para no repetir "equipo"
     private $tipo;
     private $estado;
     private $idSucursal;
-    private $foto;
 
 
     public function __construct() {
@@ -33,7 +33,6 @@ class Equipo {
         $this->tipo             = "";
         $this->estado           = self::ESTADO_DISPONIBLE;
         $this->idSucursal       = null;
-        $this->foto             = "";
     }
 
 
@@ -47,7 +46,6 @@ class Equipo {
     public function getTipo()             { return $this->tipo; }
     public function getEstado()           { return $this->estado; }
     public function getIdSucursal()       { return $this->idSucursal; }
-    public function getFoto()             { return $this->foto; }
 
     // setters
     public function setIdEquipo($id)            { $this->idEquipo = $id; }
@@ -59,7 +57,6 @@ class Equipo {
     public function setTipo($t)                 { $this->tipo = $t; }
     public function setEstado($e)               { $this->estado = $e; }
     public function setIdSucursal($id)          { $this->idSucursal = $id; }
-    public function setFoto($f)                 { $this->foto = $f; }
 
 
 
@@ -70,22 +67,21 @@ class Equipo {
 
         if ($this->idEquipo === null) {
             $consulta = "INSERT INTO equipos
-                         (codigo_inventario, marca, modelo, anio_adquisicion, valor_estimado, tipo, estado, id_sucursal, foto)
+                         (codigo_inventario, marca, modelo, anio_adquisicion, valor_estimado, tipo_equipo, estado, id_sucursal)
                          VALUES
                          ('$this->codigoInventario', '$this->marca', '$this->modelo',
                           $this->anioAdquisicion, $this->valorEstimado,
-                          '$this->tipo', '$this->estado', $this->idSucursal, '$this->foto')";
+                          '$this->tipo', '$this->estado', $this->idSucursal)";
         } else {
             $consulta = "UPDATE equipos SET
                             codigo_inventario = '$this->codigoInventario',
-                            marca = '$this->marca',
-                            modelo = '$this->modelo',
-                            anio_adquisicion = $this->anioAdquisicion,
-                            valor_estimado = $this->valorEstimado,
-                            tipo = '$this->tipo',
-                            estado = '$this->estado',
-                            id_sucursal = $this->idSucursal,
-                            foto = '$this->foto'
+                            marca             = '$this->marca',
+                            modelo            = '$this->modelo',
+                            anio_adquisicion  = $this->anioAdquisicion,
+                            valor_estimado    = $this->valorEstimado,
+                            tipo_equipo       = '$this->tipo',
+                            estado            = '$this->estado',
+                            id_sucursal       = $this->idSucursal
                          WHERE id_equipo = $this->idEquipo";
         }
 
@@ -106,22 +102,27 @@ class Equipo {
 
         if ($resultado && mysqli_num_rows($resultado) > 0) {
             $fila = mysqli_fetch_array($resultado, MYSQLI_ASSOC);
-            $this->idEquipo         = $fila['id_equipo'];
-            $this->codigoInventario = $fila['codigo_inventario'];
-            $this->marca            = $fila['marca'];
-            $this->modelo           = $fila['modelo'];
-            $this->anioAdquisicion  = $fila['anio_adquisicion'];
-            $this->valorEstimado    = $fila['valor_estimado'];
-            $this->tipo             = $fila['tipo'];
-            $this->estado           = $fila['estado'];
-            $this->idSucursal       = $fila['id_sucursal'];
-            $this->foto             = $fila['foto'];
+            $this->llenarDesdeFila($fila);
             $conexion->cerrarConexion();
             return true;
         }
 
         $conexion->cerrarConexion();
         return false;
+    }
+
+
+    // llena los atributos del objeto desde una fila de la base
+    private function llenarDesdeFila($fila) {
+        $this->idEquipo         = $fila['id_equipo'];
+        $this->codigoInventario = $fila['codigo_inventario'];
+        $this->marca            = $fila['marca'];
+        $this->modelo           = $fila['modelo'];
+        $this->anioAdquisicion  = $fila['anio_adquisicion'];
+        $this->valorEstimado    = $fila['valor_estimado'];
+        $this->tipo             = $fila['tipo_equipo'];
+        $this->estado           = $fila['estado'];
+        $this->idSucursal       = $fila['id_sucursal'];
     }
 
 
@@ -187,16 +188,7 @@ class Equipo {
         $lista = [];
         while ($fila = mysqli_fetch_array($resultado, MYSQLI_ASSOC)) {
             $e = new Equipo();
-            $e->setIdEquipo($fila['id_equipo']);
-            $e->setCodigoInventario($fila['codigo_inventario']);
-            $e->setMarca($fila['marca']);
-            $e->setModelo($fila['modelo']);
-            $e->setAnioAdquisicion($fila['anio_adquisicion']);
-            $e->setValorEstimado($fila['valor_estimado']);
-            $e->setTipo($fila['tipo']);
-            $e->setEstado($fila['estado']);
-            $e->setIdSucursal($fila['id_sucursal']);
-            $e->setFoto($fila['foto']);
+            $e->llenarDesdeFila($fila);
             $lista[] = $e;
         }
         return $lista;
