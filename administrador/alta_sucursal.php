@@ -1,9 +1,9 @@
 <?php
-session_start();
+require_once __DIR__ . "/../includes/validar_sesion.php";
 
 // solo administradores acceden a esta pagina
-if (!isset($_SESSION['tipo_usuario']) || $_SESSION['tipo_usuario'] != 'administrador') {
-    header("Location: login.html");
+if ($_SESSION['tipo_usuario'] !== 'administrador') {
+    header("Location: ../login.php");
     exit();
 }
 
@@ -31,7 +31,7 @@ $error = isset($_GET['error']) ? $_GET['error'] : "";
         <?php endif; ?>
 
         <?php if ($error != ""): ?>
-            <p align="center"><b>Error: <?php echo $error; ?></b></p>
+            <p align="center"><b>Error: <?php echo htmlspecialchars($error); ?></b></p>
         <?php endif; ?>
 
         <table align="center">

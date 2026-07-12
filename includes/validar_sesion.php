@@ -2,8 +2,11 @@
 session_start();
 
 // Si no hay sesión iniciada, no puede estar acá
+// (delego en logout.php, que calcula la ruta a login.php de forma robusta
+// sin importar desde qué profundidad de carpetas se incluya este archivo)
 if (!isset($_SESSION['tipo_usuario'])) {
-    header("Location: ../login.php?error=sin_sesion");
+    $motivoLogout = 'sin_sesion';
+    include_once __DIR__ . "/../logout.php";
     exit;
 }
 
@@ -27,16 +30,12 @@ if ($tiempoTranscurrido > $limite) {
     exit;
 }
 
-// Renovamos la cookie de actividad y calculamos cuánto tiempo le queda
+// Renovamos la cookie de actividad y calculamos cuánto tiempo le queda.
+// Queda en $tiempoRestante para que la página que incluye este archivo
+// decida dónde y cómo mostrarlo (no lo mostramos acá para no imprimir
+// texto suelto antes del <!DOCTYPE html> ni duplicar el mensaje).
 setcookie('ultimo_acceso', (string) time(), time() + $limite, '/');
 $tiempoRestante = $limite - $tiempoTranscurrido;
-
-// Mostrar el tiempo restante
-echo "Tiempo de inactividad: " . gmdate("H:i:s", $tiempoRestante);
-
-
-
-
 ?>
 
 

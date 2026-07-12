@@ -2,16 +2,10 @@
 
 class Funcionario extends Usuario{
 
-    // Constructor de la clase Funcionario
-    public function __construct($id_usuario, $primer_nombre, $primer_apellido, $email, $password, $foto) {
-        parent::__construct($id_usuario, $primer_nombre, $primer_apellido, $email, $password, $foto);
-    }
-
-    //metodo solicitarPrestamo: solicita un prestamo de un equipo, recibe el id del equipo y la fecha de devolucion
-    public function solicitarPrestamo($id_equipo, $fecha_devolucion){
-
-    // llamo a al archivo solicitarPrestamo.php para mostrar el formulario de solicitud de prestamo
-    require_once __DIR__ . '/../funcionario/solicitarPrestamo.php';
+    // Constructor de la clase Funcionario (sin parametros, igual que Usuario: se cargan datos con setters o con cargar())
+    public function __construct() {
+        parent::__construct();
+        $this->setTipoUsuario(self::TIPO_FUNCIONARIO);
     }
 
     //metodo obtenerPrestamosActivos: obtiene los prestamos activos del funcionario

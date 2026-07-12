@@ -3,7 +3,7 @@
 
 class ConexionBD {
     private $host = "localhost";
-    private $baseDatos = "techrent";
+    private $baseDatos = "obligatorio2026";
     private $usuario = "root";
     private $password = "";
     private $conn = null;

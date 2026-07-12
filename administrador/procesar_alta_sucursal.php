@@ -1,13 +1,13 @@
 <?php
-session_start();
+require_once __DIR__ . "/../includes/validar_sesion.php";
 
 // validar que es admin antes de procesar
-if (!isset($_SESSION['tipo_usuario']) || $_SESSION['tipo_usuario'] != 'administrador') {
-    header("Location: login.html");
+if ($_SESSION['tipo_usuario'] !== 'administrador') {
+    header("Location: ../login.php");
     exit();
 }
 
-require_once "clases/Sucursal.php";
+require_once __DIR__ . "/../clases/Sucursal.php";
 
 
 if (isset($_POST['Guardar'])) {

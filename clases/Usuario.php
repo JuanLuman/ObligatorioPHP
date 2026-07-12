@@ -82,43 +82,48 @@ class Usuario extends ConexionBD {
     // guardar: INSERT si es nuevo, UPDATE si ya existe
     public function guardar() {
 
-        // me conecto a la base con la clase ConexionBD que se conecto usando PDO
-        //require_once __DIR__ . "/../conexion/Conexion.php";
+        // uso prepared statements (parametros con ?) para evitar inyeccion SQL,
+        // ya que estos valores vienen de datos ingresados por el usuario
+        $conn = $this->conectar();
 
-        //$conexion = new ConexionBD();
-        //$conexion->conectar();
-
-        // Si el usuario no tiene ci, es nuevo y hago INSERT
-        // como herredo de ConexionBD, puedo usar $this->ejecutarConsulta() directamente
-        $check = $this->ejecutarConsulta("SELECT ci FROM usuarios WHERE ci = '$this->ci'");
-        $existe = $check && $check->fetch() !== false;
+        $check = $conn->prepare("SELECT ci FROM usuarios WHERE ci = ?");
+        $check->execute([$this->ci]);
+        $existe = $check->fetch() !== false;
 
         if (!$existe) {
-            $consulta = "INSERT INTO usuarios
+            $stmt = $conn->prepare("INSERT INTO usuarios
                          (ci, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido,
                           fecha_nacimiento, email, password, foto, tipo_usuario, id_sucursal, activo)
-                         VALUES
-                         ('$this->ci', '$this->primerNombre', '$this->segundoNombre',
-                          '$this->primerApellido', '$this->segundoApellido',
-                          '$this->fechaNacimiento', '$this->email', '$this->password',
-                          '$this->foto', '$this->tipoUsuario', $this->idSucursal, $this->activo)";
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $resultado = $stmt->execute([
+                $this->ci, $this->primerNombre, $this->segundoNombre,
+                $this->primerApellido, $this->segundoApellido,
+                $this->fechaNacimiento, $this->email, $this->password,
+                $this->foto, $this->tipoUsuario, $this->idSucursal, $this->activo,
+            ]);
         } else {
-            $consulta = "UPDATE usuarios SET
-                            primer_nombre    = '$this->primerNombre',
-                            segundo_nombre   = '$this->segundoNombre',
-                            primer_apellido  = '$this->primerApellido',
-                            segundo_apellido = '$this->segundoApellido',
-                            fecha_nacimiento = '$this->fechaNacimiento',
-                            email            = '$this->email',
-                            password         = '$this->password',
-                            foto             = '$this->foto',
-                            tipo_usuario     = '$this->tipoUsuario',
-                            id_sucursal      = $this->idSucursal,
-                            activo           = $this->activo
-                         WHERE ci = '$this->ci'";
+            $stmt = $conn->prepare("UPDATE usuarios SET
+                            primer_nombre    = ?,
+                            segundo_nombre   = ?,
+                            primer_apellido  = ?,
+                            segundo_apellido = ?,
+                            fecha_nacimiento = ?,
+                            email            = ?,
+                            password         = ?,
+                            foto             = ?,
+                            tipo_usuario     = ?,
+                            id_sucursal      = ?,
+                            activo           = ?
+                         WHERE ci = ?");
+            $resultado = $stmt->execute([
+                $this->primerNombre, $this->segundoNombre,
+                $this->primerApellido, $this->segundoApellido,
+                $this->fechaNacimiento, $this->email, $this->password,
+                $this->foto, $this->tipoUsuario, $this->idSucursal, $this->activo,
+                $this->ci,
+            ]);
         }
 
-        $resultado = $this->ejecutarConsulta($consulta);
         $this->cerrarConexion();
         return $resultado;
     }
@@ -127,13 +132,10 @@ class Usuario extends ConexionBD {
 
     // cargar: busca el usuario por ci y llena los atributos
     public function cargar($ci) {
-        //$conexion = new ConexionBD();
-        //$conexion->conectar();
-
-        $consulta = "SELECT * FROM usuarios WHERE ci = '$ci'"; // utilizo FDO para compatibilidad con PDO
-        
-        $resultado = $this->ejecutarConsulta($consulta);
-        $fila = $resultado ? $resultado->fetch() : false; // utilizo fetch() en lugar de mysqli_fetch_array() para compatibilidad con PDO
+        $conn = $this->conectar();
+        $stmt = $conn->prepare("SELECT * FROM usuarios WHERE ci = ?");
+        $stmt->execute([$ci]);
+        $fila = $stmt->fetch();
 
         if ($fila) {
             $this->ci              = $fila['ci'];
@@ -165,11 +167,10 @@ class Usuario extends ConexionBD {
         if ($this->ci === null) {
             return false;
         }
-       // $conexion = new ConexionBD();
-       // $conexion->conectar();
 
-        $consulta = "UPDATE usuarios SET activo = 0 WHERE ci = '$this->ci'";
-        $resultado = $this->ejecutarConsulta($consulta);
+        $conn = $this->conectar();
+        $stmt = $conn->prepare("UPDATE usuarios SET activo = 0 WHERE ci = ?");
+        $resultado = $stmt->execute([$this->ci]);
 
         $this->cerrarConexion();
         $this->activo = 0;
@@ -180,15 +181,13 @@ class Usuario extends ConexionBD {
 
     // autenticar: verifica email + password (compara contra md5 igual que validacion_login)
     public function autenticar($email, $passwordPlano) {
-        // $conexion = new ConexionBD();
-        // $conexion->conectar();
+        $conn = $this->conectar();
 
         $hash = md5($passwordPlano);
-        $consulta = "SELECT * FROM usuarios
-                     WHERE email = '$email' AND password = '$hash' AND activo = 1";
-
-        $resultado = $this->ejecutarConsulta($consulta);
-        $fila = $resultado ? $resultado->fetch() : false; // utilizo fetch() en lugar de mysqli_num_rows()/mysqli_fetch_array() para compatibilidad con PDO
+        $stmt = $conn->prepare("SELECT * FROM usuarios
+                     WHERE email = ? AND password = ? AND activo = 1");
+        $stmt->execute([$email, $hash]);
+        $fila = $stmt->fetch();
 
         if ($fila) {
             $u = new Usuario();

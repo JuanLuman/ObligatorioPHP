@@ -1,10 +1,10 @@
 <?php
 
 // Inicio la sesión para acceder a los datos del usuario logueado
-session_start();
+require_once __DIR__ . "/../includes/validar_sesion.php";
 
-// Verifico que exista una sesión activa y que el usuario sea funcionario
-if (!isset($_SESSION['tipo_usuario']) || $_SESSION['tipo_usuario'] != 'funcionario') {
+// Verifico que el usuario sea funcionario
+if ($_SESSION['tipo_usuario'] !== 'funcionario') {
     header("Location: ../login.php?error=No tienes permisos para acceder a esta página");
     exit();
 }

@@ -7,16 +7,15 @@ if ($_SESSION['tipo_usuario'] !== 'administrador') {
 }
 
 require_once "../clases/Usuario.php";
-require_once "../clases/Equipo.php"; // TODO: falta escribir esta clase con PDO
+require_once "../clases/Equipo.php";
 
-$usuario = Usuario->cargar($_SESSION['id_usuario']);
+$usuario = new Usuario();
+$usuario->cargar($_SESSION['id_usuario']);
 
-// Cada uno de estos trae la lista de equipos filtrados por estado.
-// Igual que en Prestamo, deberían ser estáticos, PDO con prepared statements,
-// y devolver arrays asociativos con foto, codigo_inventario, marca, modelo.
-$equiposPrestados     = Equipo->obtenerPorEstado('Prestado');
-$equiposVencidos      = Equipo->obtenerVencidos(); // requiere JOIN con prestamos
-$equiposMantenimiento = Equipo->obtenerPorEstado('Mantenimiento');
+$equipo = new Equipo();
+$equiposPrestados     = $equipo->obtenerPorEstado(Equipo::ESTADO_PRESTADO);
+$equiposVencidos      = $equipo->obtenerVencidos();
+$equiposMantenimiento = $equipo->obtenerPorEstado(Equipo::ESTADO_MANTENIMIENTO);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -31,9 +30,12 @@ $equiposMantenimiento = Equipo->obtenerPorEstado('Mantenimiento');
 
     <nav>
         <ul>
-            <?php foreach ($usuario->obtenerMenu() as $opcion): ?>
-                <li><?php echo htmlspecialchars($opcion); ?></li>
-            <?php endforeach; ?>
+            <li><a href="alta_equipo.php">Alta de equipo</a></li>
+            <li><a href="alta_sucursal.php">Alta de sucursal</a></li>
+            <li><a href="alta_usuario.php">Alta de usuario</a></li>
+            <li><a href="historial.php">Historial de préstamos</a></li>
+            <li><a href="reportes.php">Reportes</a></li>
+            <li><a href="perfil.php">Mi perfil</a></li>
         </ul>
     </nav>
 
@@ -48,7 +50,7 @@ $equiposMantenimiento = Equipo->obtenerPorEstado('Mantenimiento');
             echo "<tr><th>Imagen</th><th>Código de inventario</th><th>Marca y modelo</th></tr>";
             foreach ($equipos as $equipo) {
                 echo "<tr>";
-                echo "<td><img src='../fotos_equipos/" . htmlspecialchars($equipo['foto']) . "' width='100'></td>";
+                echo "<td><img src='../fotos/" . htmlspecialchars($equipo['foto']) . "' width='100'></td>";
                 echo "<td>" . htmlspecialchars($equipo['codigo_inventario']) . "</td>";
                 echo "<td>" . htmlspecialchars($equipo['marca'] . ' ' . $equipo['modelo']) . "</td>";
                 echo "</tr>";

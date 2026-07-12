@@ -10,8 +10,9 @@ if ($_SESSION['tipo_usuario'] !== 'funcionario') {
 require_once "../clases/Usuario.php";
 require_once "../clases/Prestamo.php";
 
-$usuario = Usuario::cargar($_SESSION['ci']);
-$prestamosActivos = $usuario->obtenerPrestamosActivos();
+$usuario = new Usuario();
+$usuario->cargar($_SESSION['id_usuario']);
+$prestamosActivos = Prestamo::obtenerPrestamosActivos($_SESSION['id_usuario']);
 ?>
 
 
@@ -28,9 +29,10 @@ $prestamosActivos = $usuario->obtenerPrestamosActivos();
 
     <nav>
         <ul>
-            <?php foreach ($usuario->obtenerMenu() as $opcion): ?>
-                <li><?php echo htmlspecialchars($opcion); ?></li>
-            <?php endforeach; ?>
+            <li><a href="solicitarPrestamo.php">Solicitar préstamo</a></li>
+            <li><a href="../registrarDevolucion.php">Registrar devolución</a></li>
+            <li><a href="historial.php">Historial de préstamos</a></li>
+            <li><a href="perfil.php">Mi perfil</a></li>
         </ul>
     </nav>
 
@@ -50,7 +52,7 @@ $prestamosActivos = $usuario->obtenerPrestamosActivos();
                 </tr>
                 <?php foreach ($prestamosActivos as $prestamo): ?>
                     <tr>
-                        <td><img src="../fotos_equipos/<?php echo htmlspecialchars($prestamo['foto']); ?>" alt="Imagen del equipo" width="100"></td>
+                        <td><img src="../fotos/<?php echo htmlspecialchars($prestamo['foto']); ?>" alt="Imagen del equipo" width="100"></td>
                         <td><?php echo htmlspecialchars($prestamo['codigo_inventario']); ?></td>
                         <td><?php echo htmlspecialchars($prestamo['marca'] . ' ' . $prestamo['modelo']); ?></td>
                         <td><?php echo htmlspecialchars($prestamo['fecha_prestamo']); ?></td>

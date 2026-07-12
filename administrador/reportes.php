@@ -4,10 +4,10 @@
 // debo verificar que el usuario sea un administrador antes de mostrar la página de reportes
 
 //debo invocar session_start() antes de cualquier salida al navegador para poder usar   // el array superglobal $_SESSION
-session_start();
+require_once __DIR__ . "/../includes/validar_sesion.php";
 
 //verifico que el usuario sea un administrador, si no lo es, lo redirijo a la página de login
-if (!isset($_SESSION['tipo_usuario']) || $_SESSION['tipo_usuario'] != 'administrador') {
+if ($_SESSION['tipo_usuario'] !== 'administrador') {
     //redirijo al login con un mensaje de error indicando que no tiene permisos para acceder a esta página
      header("Location: ../login.php?error=No tienes permisos para acceder a esta página");
      exit();

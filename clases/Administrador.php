@@ -3,9 +3,10 @@
 class Administrador extends Usuario
 {
 
-    // Constructor de la clase Administrador
-    public function __construct($id_usuario, $primer_nombre, $primer_apellido, $email, $password, $foto) {
-        parent::__construct($id_usuario, $primer_nombre, $primer_apellido, $email, $password, $foto); 
+    // Constructor de la clase Administrador (sin parametros, igual que Usuario: se cargan datos con setters o con cargar())
+    public function __construct() {
+        parent::__construct();
+        $this->setTipoUsuario(self::TIPO_ADMINISTRADOR);
     }
 
     // metodo propio AltaSucursal: permite al administrador dar de alta una nueva sucursal

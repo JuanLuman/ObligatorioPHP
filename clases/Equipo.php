@@ -67,36 +67,38 @@ class Equipo extends ConexionBD {
 
     // guardar: INSERT si no tiene id, UPDATE si tiene
     public function guardar() {
-        //$conexion = new ConexionBD();
-        //$conexion->conectar();
+        $conn = $this->conectar();
 
         if ($this->idEquipo === null) {
-            $consulta = "INSERT INTO equipos
-                         (codigo_inventario, marca, modelo, anio_adquisicion, valor_estimado, tipo, estado, id_sucursal, foto)
-                         VALUES
-                         ('$this->codigoInventario', '$this->marca', '$this->modelo',
-                          $this->anioAdquisicion, $this->valorEstimado,
-                          '$this->tipo', '$this->estado', $this->idSucursal, '$this->foto')";
+            $stmt = $conn->prepare("INSERT INTO equipos
+                         (codigo_inventario, marca, modelo, anio_adquisicion, valor_estimado, tipo_equipo, estado, id_sucursal, foto)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $resultado = $stmt->execute([
+                $this->codigoInventario, $this->marca, $this->modelo,
+                $this->anioAdquisicion, $this->valorEstimado,
+                $this->tipo, $this->estado, $this->idSucursal, $this->foto,
+            ]);
         } else {
-            $consulta = "UPDATE equipos SET
-                            codigo_inventario = '$this->codigoInventario',
-                            marca = '$this->marca',
-                            modelo = '$this->modelo',
-                            anio_adquisicion = $this->anioAdquisicion,
-                            valor_estimado = $this->valorEstimado,
-                            tipo = '$this->tipo',
-                            estado = '$this->estado',
-                            id_sucursal = $this->idSucursal,
-                            foto = '$this->foto'
-                         WHERE id_equipo = $this->idEquipo";
+            $stmt = $conn->prepare("UPDATE equipos SET
+                            codigo_inventario = ?,
+                            marca = ?,
+                            modelo = ?,
+                            anio_adquisicion = ?,
+                            valor_estimado = ?,
+                            tipo_equipo = ?,
+                            estado = ?,
+                            id_sucursal = ?,
+                            foto = ?
+                         WHERE id_equipo = ?");
+            $resultado = $stmt->execute([
+                $this->codigoInventario, $this->marca, $this->modelo,
+                $this->anioAdquisicion, $this->valorEstimado,
+                $this->tipo, $this->estado, $this->idSucursal, $this->foto,
+                $this->idEquipo,
+            ]);
         }
 
-        
-        
-       // $resultado = $conexion->ejecutarConsulta($consulta);
-        $resultado = $this->ejecutarConsulta($consulta);
         $this->cerrarConexion();
-       // $this->conexion->cerrarConexion();
         return $resultado;
     }
 
@@ -104,12 +106,10 @@ class Equipo extends ConexionBD {
 
     // cargar: trae los datos del equipo por id
     public function cargar($id) {
-       // $conexion = new ConexionBD();
-       // $conexion->conectar();
-
-        $consulta = "SELECT * FROM equipos WHERE id_equipo = $id";
-        $resultado = $this->ejecutarConsulta($consulta);
-        $fila = $resultado ? $resultado->fetch() : false;
+        $conn = $this->conectar();
+        $stmt = $conn->prepare("SELECT * FROM equipos WHERE id_equipo = ?");
+        $stmt->execute([$id]);
+        $fila = $stmt->fetch();
 
         if ($fila) {
             $this->idEquipo         = $fila['id_equipo'];
@@ -118,7 +118,7 @@ class Equipo extends ConexionBD {
             $this->modelo           = $fila['modelo'];
             $this->anioAdquisicion  = $fila['anio_adquisicion'];
             $this->valorEstimado    = $fila['valor_estimado'];
-            $this->tipo             = $fila['tipo'];
+            $this->tipo             = $fila['tipo_equipo'];
             $this->estado           = $fila['estado'];
             $this->idSucursal       = $fila['id_sucursal'];
             $this->foto             = $fila['foto'];
@@ -139,15 +139,12 @@ class Equipo extends ConexionBD {
             return false;
         }
 
-        //$conexion = new ConexionBD();
-        //$conexion->conectar();
-
-        $consulta = "DELETE FROM equipos WHERE id_equipo = $this->idEquipo";
-        $resultado = $this->ejecutarConsulta($consulta);
+        $conn = $this->conectar();
+        $stmt = $conn->prepare("DELETE FROM equipos WHERE id_equipo = ?");
+        $resultado = $stmt->execute([$this->idEquipo]);
 
         $this->cerrarConexion();
         return $resultado;
-        
     }
 
 
@@ -174,13 +171,45 @@ class Equipo extends ConexionBD {
 
     // listar solo equipos disponibles de una sucursal (lo usa el funcionario al solicitar prestamo)
     public function listarDisponibles($idSucursal) {
-        $estado = self::ESTADO_DISPONIBLE;
-        $consulta = "SELECT * FROM equipos
-                     WHERE estado = '$estado' AND id_sucursal = $idSucursal
-                     ORDER BY marca, modelo";
-        $resultado = $this->ejecutarConsulta($consulta);
+        $conn = $this->conectar();
+        $stmt = $conn->prepare("SELECT * FROM equipos
+                     WHERE estado = ? AND id_sucursal = ?
+                     ORDER BY marca, modelo");
+        $stmt->execute([self::ESTADO_DISPONIBLE, $idSucursal]);
 
-        $lista = self::resultadoAArray($resultado);
+        $lista = self::resultadoAArray($stmt);
+        $this->cerrarConexion();
+        return $lista;
+    }
+
+
+
+    // listar equipos por estado (lo usa el administrador para ver prestados/en mantenimiento/etc)
+    public function obtenerPorEstado($estado) {
+        $conn = $this->conectar();
+        $stmt = $conn->prepare("SELECT * FROM equipos WHERE estado = ? ORDER BY marca, modelo");
+        $stmt->execute([$estado]);
+
+        $lista = $stmt->fetchAll();
+        $this->cerrarConexion();
+        return $lista;
+    }
+
+
+
+    // equipos con un prestamo activo cuya fecha de devolucion prevista ya paso
+    public function obtenerVencidos() {
+        $conn = $this->conectar();
+        $stmt = $conn->prepare(
+            "SELECT e.* FROM equipos e
+             INNER JOIN prestamos p ON p.id_equipo = e.id_equipo
+             WHERE p.fecha_devolucion_real IS NULL
+               AND p.fecha_devolucion_prevista < CURDATE()
+             ORDER BY p.fecha_devolucion_prevista"
+        );
+        $stmt->execute();
+
+        $lista = $stmt->fetchAll();
         $this->cerrarConexion();
         return $lista;
     }
@@ -199,7 +228,7 @@ class Equipo extends ConexionBD {
             $e->setModelo($fila['modelo']);
             $e->setAnioAdquisicion($fila['anio_adquisicion']);
             $e->setValorEstimado($fila['valor_estimado']);
-            $e->setTipo($fila['tipo']);
+            $e->setTipo($fila['tipo_equipo']);
             $e->setEstado($fila['estado']);
             $e->setIdSucursal($fila['id_sucursal']);
             $e->setFoto($fila['foto']);
