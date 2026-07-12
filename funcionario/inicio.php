@@ -7,8 +7,8 @@ if ($_SESSION['tipo_usuario'] !== 'funcionario') {
     exit;
 }
 
-require_once "../clases/Usuario.php";
-require_once "../clases/Prestamo.php";
+require_once __DIR__ . "/../clases/Usuario.php";
+require_once __DIR__ . "/../clases/Prestamo.php";
 
 $usuario = new Usuario();
 $usuario->cargar($_SESSION['id_usuario']);
@@ -52,7 +52,7 @@ $prestamosActivos = Prestamo::obtenerPrestamosActivos($_SESSION['id_usuario']);
                 </tr>
                 <?php foreach ($prestamosActivos as $prestamo): ?>
                     <tr>
-                        <td><img src="../fotos/<?php echo htmlspecialchars($prestamo['foto']); ?>" alt="Imagen del equipo" width="100"></td>
+                        <td><img src="../fotos/<?php echo htmlspecialchars($prestamo['foto'] ?? ''); ?>" alt="Imagen del equipo" width="100"></td>
                         <td><?php echo htmlspecialchars($prestamo['codigo_inventario']); ?></td>
                         <td><?php echo htmlspecialchars($prestamo['marca'] . ' ' . $prestamo['modelo']); ?></td>
                         <td><?php echo htmlspecialchars($prestamo['fecha_prestamo']); ?></td>

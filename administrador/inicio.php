@@ -50,7 +50,7 @@ $equiposMantenimiento = $equipo->obtenerPorEstado(Equipo::ESTADO_MANTENIMIENTO);
             echo "<tr><th>Imagen</th><th>Código de inventario</th><th>Marca y modelo</th></tr>";
             foreach ($equipos as $equipo) {
                 echo "<tr>";
-                echo "<td><img src='../fotos/" . htmlspecialchars($equipo['foto']) . "' width='100'></td>";
+                echo "<td><img src='../fotos/" . htmlspecialchars($equipo['foto'] ?? '') . "' width='100'></td>";
                 echo "<td>" . htmlspecialchars($equipo['codigo_inventario']) . "</td>";
                 echo "<td>" . htmlspecialchars($equipo['marca'] . ' ' . $equipo['modelo']) . "</td>";
                 echo "</tr>";
