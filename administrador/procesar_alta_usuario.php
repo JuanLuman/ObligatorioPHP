@@ -19,6 +19,12 @@ if (isset($_POST['Guardar'])) {
         exit();
     }
 
+    // el form solo valida esto con minlength en el HTML, hay que repetirlo en el servidor
+    if (strlen($_POST['password']) < 8) {
+        header("Location: alta_usuario.php?error=La contraseña debe tener al menos 8 caracteres");
+        exit();
+    }
+
     // no permitir dos usuarios con la misma cedula
     if ((new Usuario())->cargar($_POST['ci'])) {
         header("Location: alta_usuario.php?error=Ya existe un usuario con esa cedula");
