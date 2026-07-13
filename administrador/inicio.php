@@ -33,6 +33,7 @@ $equiposMantenimiento = $equipo->obtenerPorEstado(Equipo::ESTADO_MANTENIMIENTO);
             <li><a href="alta_equipo.php">Alta de equipo</a></li>
             <li><a href="alta_sucursal.php">Alta de sucursal</a></li>
             <li><a href="alta_usuario.php">Alta de usuario</a></li>
+            <li><a href="registrar_devolucion.php">Registrar devolución</a></li>
             <li><a href="historial.php">Historial de préstamos</a></li>
             <li><a href="reportes.php">Reportes</a></li>
             <li><a href="perfil.php">Mi perfil</a></li>

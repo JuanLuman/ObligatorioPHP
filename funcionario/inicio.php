@@ -30,7 +30,7 @@ $prestamosActivos = Prestamo::obtenerPrestamosActivos($_SESSION['id_usuario']);
     <nav>
         <ul>
             <li><a href="solicitarPrestamo.php">Solicitar préstamo</a></li>
-            <li><a href="../registrarDevolucion.php">Registrar devolución</a></li>
+            <li><a href="registrarDevolucion.php">Registrar devolución</a></li>
             <li><a href="historial.php">Historial de préstamos</a></li>
             <li><a href="perfil.php">Mi perfil</a></li>
         </ul>

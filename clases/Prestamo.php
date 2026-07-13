@@ -130,6 +130,37 @@ class Prestamo
         return $prestamos;
     }
 
+    // todos los prestamos activos, de cualquier funcionario (lo usa el administrador
+    // para poder registrar la devolucion de cualquiera, no solo la propia)
+    public static function obtenerTodosActivos() {
+        $conexion = new ConexionBD();
+
+        $sql = "SELECT p.id_prestamo,
+                       p.id_equipo,
+                       p.fecha_prestamo,
+                       p.fecha_devolucion_prevista,
+                       u.ci,
+                       u.primer_nombre,
+                       u.primer_apellido,
+                       e.codigo_inventario,
+                       e.marca,
+                       e.modelo
+                FROM prestamos p
+                INNER JOIN equipos e ON p.id_equipo = e.id_equipo
+                INNER JOIN usuarios u ON p.id_funcionario = u.ci
+                WHERE p.fecha_devolucion_real IS NULL
+                ORDER BY p.fecha_devolucion_prevista";
+
+        $stmt = $conexion->ejecutarConsulta($sql);
+
+        $prestamos = $stmt->fetchAll();
+        foreach ($prestamos as &$fila) {
+            $fila['estado'] = self::calcularEstado($fila['fecha_devolucion_prevista']);
+        }
+
+        return $prestamos;
+    }
+
     // Sin valores variables: puede usar ejecutarConsulta() directo
     public static function obtenerHistorialCompleto() {
         $conexion = new ConexionBD();

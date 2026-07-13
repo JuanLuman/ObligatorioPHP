@@ -1,16 +1,16 @@
 <?php
 
 // Inicio la sesión para acceder a los datos del usuario logueado
-require_once __DIR__ . "/includes/validar_sesion.php";
+require_once __DIR__ . "/../includes/validar_sesion.php";
 
 // Verifico que el usuario sea un funcionario
 if ($_SESSION['tipo_usuario'] !== 'funcionario') {
-    header("Location: login.php?error=No tienes permisos para acceder a esta página");
+    header("Location: ../login.php?error=No tienes permisos para acceder a esta página");
     exit();
 }
 
 // Incluyo la clase Prestamo
-require_once __DIR__ . "/clases/Prestamo.php";
+require_once __DIR__ . "/../clases/Prestamo.php";
 
 
 //=======================================================
