@@ -87,5 +87,8 @@ $sucursales = (new Sucursal())->listarTodas();
             </td></tr>
         </table>
     </fieldset>
+
+    <p align="center"><a href="inicio.php">Volver al menú principal</a></p>
+
 </body>
 </html>

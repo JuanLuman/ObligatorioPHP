@@ -50,6 +50,7 @@ echo "<h2 align='center'>Registrar devolución - TechRent</h2>";
 if (count($prestamos) == 0)
 {
     echo "<p align='center'>No hay préstamos activos.</p>";
+    echo "<p align='center'><a href='inicio.php'>Volver al menú principal</a></p>";
     exit();
 }
 
@@ -113,5 +114,7 @@ foreach ($prestamos as $prestamo)
 }
 
 echo "</table>";
+
+echo "<p align='center'><a href='inicio.php'>Volver al menú principal</a></p>";
 
 ?>

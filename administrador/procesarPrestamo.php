@@ -29,10 +29,10 @@ $prestamo = new Prestamo($idEquipo, $idFuncionario, $fechaPrestamo, $fechaDevolu
 $errores = $prestamo->procesarPrestamo();
 
 if (empty($errores)) {
-    echo "<h3>Préstamo registrado correctamente.</h3>";
+    header("Location: alta_prestamo.php?ok=1");
 } else {
-    echo "<h3>Error:</h3>";
-    echo implode("<br>", array_map('htmlspecialchars', $errores));
+    header("Location: alta_prestamo.php?error=" . urlencode(implode(" - ", $errores)));
 }
+exit();
 
 ?>

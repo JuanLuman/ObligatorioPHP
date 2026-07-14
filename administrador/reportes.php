@@ -230,4 +230,6 @@ FuncionariosConMasPrestamos();
 EquiposVencidos();
 PrestamosPorSucursal();
 
+echo "<p align='center'><a href='inicio.php'>Volver al menú principal</a></p>";
+
 ?>

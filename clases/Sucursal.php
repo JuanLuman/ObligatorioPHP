@@ -1,7 +1,4 @@
 <?php
-//validacion de sesion
-session_start();
-
 require_once __DIR__ . "/../conexion/Conexion.php";
 
 class Sucursal extends ConexionBD {

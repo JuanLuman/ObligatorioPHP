@@ -1,6 +1,11 @@
 <?php
 // Conexión centralizada a la base de datos con PDO
 
+// El timezone por defecto del servidor no coincidía con el de la base de datos
+// (calcularEstado() y fecha_devolucion_real en Prestamo.php usaban date()/DateTime()
+// con el timezone por defecto de PHP, desfasado varias horas contra CURDATE() de MySQL).
+date_default_timezone_set('America/Montevideo');
+
 class ConexionBD {
     private $host = "localhost";
     private $baseDatos = "obligatorio2026";
