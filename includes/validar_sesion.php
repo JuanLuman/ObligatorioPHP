@@ -12,6 +12,7 @@ if (!isset($_SESSION['tipo_usuario'])) {
 
 // Límite de inactividad según el rol (regla de negocio 10 del enunciado),
 // controlado mediante una cookie ('ultimo_acceso') en lugar de la sesión.
+
 $limite = ($_SESSION['tipo_usuario'] === 'administrador') ? 3600 : 900;
 
 // Sin cookie no hay forma de saber hace cuánto fue el último acceso: se trata como expirada
